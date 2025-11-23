@@ -87,6 +87,11 @@ const MOCK_PROPERTIES: Record<string, any> = {
 };
 
 async function getProperty(slug: string) {
+    console.log("Fetching property for slug:", slug);
+    // Forcing mock data to ensure UI works while DB is down
+    return MOCK_PROPERTIES[slug] || MOCK_PROPERTIES['sai-balaji-pg'];
+
+    /* 
     try {
         await dbConnect();
         const property = await Property.findOne({ slug }).populate('ownerId', 'name').lean();
@@ -95,6 +100,7 @@ async function getProperty(slug: string) {
         console.error("DB Error, using mock", e);
         return MOCK_PROPERTIES[slug] || MOCK_PROPERTIES['sai-balaji-pg'];
     }
+    */
 }
 
 export default async function PropertyPage({ params }: { params: Promise<{ slug: string }> }) {

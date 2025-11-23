@@ -19,10 +19,10 @@ function ensureValidImages(property: any) {
     // Use picsum.photos for reliable placeholder images
     // Different seed values ensure different images
     const placeholders = [
-        'https://picsum.photos/seed/room1/800/600',
-        'https://picsum.photos/seed/area2/800/600',
-        'https://picsum.photos/seed/view3/800/600',
-        'https://picsum.photos/seed/facility4/800/600'
+        'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?q=80&w=2069&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1522771753035-4a53c9d1314f?q=80&w=2070&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?q=80&w=2070&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=2069&auto=format&fit=crop'
     ];
 
     // Ensure we have at least 4 images

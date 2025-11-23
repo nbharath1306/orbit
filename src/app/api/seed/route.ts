@@ -36,10 +36,10 @@ export async function GET() {
                 amenities: ['High-Speed WiFi', '3 Times Food', '24/7 Hot Water', 'CCTV Security', 'Power Backup', 'Daily Housekeeping', 'Laundry Service', 'Study Room'],
                 media: {
                     images: [
-                        'https://placehold.co/800x600/1e40af/ffffff?text=Sai+Balaji+Room',
-                        'https://placehold.co/800x600/1e40af/ffffff?text=Common+Area',
-                        'https://placehold.co/800x600/1e40af/ffffff?text=Dining+Hall',
-                        'https://placehold.co/800x600/1e40af/ffffff?text=Study+Room'
+                        'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?q=80&w=2069&auto=format&fit=crop', // Hostel room
+                        'https://images.unsplash.com/photo-1522771753035-4a53c9d1314f?q=80&w=2070&auto=format&fit=crop', // Common area
+                        'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?q=80&w=2070&auto=format&fit=crop', // Bedroom
+                        'https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=2069&auto=format&fit=crop'  // Study area
                     ],
                     virtualTourUrl: 'https://kuula.co/share/collection/7lVLq',
                 },
@@ -62,10 +62,10 @@ export async function GET() {
                 amenities: ['High-Speed WiFi', 'Gym Access', 'Library 24/7', 'Mess Food', '24/7 Power Backup', 'CCTV Security', 'Sports Facilities', 'Common Rooms'],
                 media: {
                     images: [
-                        'https://placehold.co/800x600/059669/ffffff?text=DSU+Hostel+Room',
-                        'https://placehold.co/800x600/059669/ffffff?text=Gym+Facility',
-                        'https://placehold.co/800x600/059669/ffffff?text=Library',
-                        'https://placehold.co/800x600/059669/ffffff?text=Campus+View'
+                        'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=2070&auto=format&fit=crop', // Campus building
+                        'https://images.unsplash.com/photo-1595524362625-27c917c35e41?q=80&w=2069&auto=format&fit=crop', // Modern room
+                        'https://images.unsplash.com/photo-1580587771525-78b9dba3b91d?q=80&w=1974&auto=format&fit=crop', // Library/Study
+                        'https://images.unsplash.com/photo-1576495199011-eb94736d05d6?q=80&w=2072&auto=format&fit=crop'  // Gym/Rec
                     ],
                     virtualTourUrl: 'https://kuula.co/share/collection/7lVLq',
                 },
@@ -88,10 +88,10 @@ export async function GET() {
                 amenities: ['WiFi', 'Bike Parking', 'Basic Furniture', 'Water Supply 24/7', 'Security Guard', 'Common Kitchen'],
                 media: {
                     images: [
-                        'https://placehold.co/800x600/dc2626/ffffff?text=Green+View+Room',
-                        'https://placehold.co/800x600/dc2626/ffffff?text=Kitchen+Area',
-                        'https://placehold.co/800x600/dc2626/ffffff?text=Parking+Space',
-                        'https://placehold.co/800x600/dc2626/ffffff?text=Building+View'
+                        'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop', // Apartment room
+                        'https://images.unsplash.com/photo-1556912172-45b7abe8b7e1?q=80&w=2070&auto=format&fit=crop', // Kitchen
+                        'https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=2070&auto=format&fit=crop', // Living area
+                        'https://images.unsplash.com/photo-1484154218962-a1c002085d2f?q=80&w=2071&auto=format&fit=crop'  // Exterior
                     ],
                     virtualTourUrl: 'https://kuula.co/share/collection/7lVLq',
                 },

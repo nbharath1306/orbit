@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,97 +10,11 @@ import { BookingButton } from '@/components/BookingButton';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { Button } from '@/components/ui/button';
 
-// Mock Data for fallback since DB is down
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const MOCK_PROPERTIES: Record<string, any> = {
-    'sai-balaji-pg': {
-        _id: 'mock-id-1',
-        title: 'Sai Balaji PG',
-        slug: 'sai-balaji-pg',
-        description: 'Experience premium student living just minutes from DSU. Our facility offers a perfect blend of comfort, community, and convenience. With 24/7 security, nutritious home-cooked meals, and high-speed WiFi, you can focus on your studies while we take care of the rest.',
-        location: {
-            lat: 12.644,
-            lng: 77.436,
-            address: 'Harohalli, Karnataka',
-            directionsVideoUrl: 'https://youtube.com/shorts/example',
-        },
-        price: { amount: 6500, period: 'monthly' },
-        amenities: ['High-Speed WiFi', '3 Times Food', '24/7 Hot Water', 'CCTV Security', 'Power Backup', 'Daily Housekeeping'],
-        media: {
-            images: [
-                'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=2069&q=80',
-                'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-                'https://images.unsplash.com/photo-1522771753037-6333d7911961?ixlib=rb-4.0.3&auto=format&fit=crop&w=2051&q=80'
-            ],
-            virtualTourUrl: 'https://kuula.co/share/collection/7lVLq',
-        },
-        liveStats: { totalRooms: 50, occupiedRooms: 42 },
-        verdict: 'Best food in Harohalli. Highly recommended for DSU students.',
-        sentimentTags: ['Good Food', 'Strict Warden', 'Walkable to Campus'],
-        ownerId: { name: 'Orbit Owner' }
-    },
-    'dsu-hostels': {
-        _id: 'mock-id-2',
-        title: 'DSU Hostels',
-        slug: 'dsu-hostels',
-        description: 'Official on-campus accommodation for DSU students. Safe, secure, and right in the heart of the campus. Enjoy the convenience of being just a 2-minute walk from your classes.',
-        location: {
-            lat: 12.645,
-            lng: 77.437,
-            address: 'DSU Campus, Harohalli',
-        },
-        price: { amount: 9000, period: 'monthly' },
-        amenities: ['On-Campus', '24/7 Security', 'Mess Food', 'Study Halls', 'Gym Access', 'Laundry'],
-        media: {
-            images: [
-                'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-                'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=2069&q=80',
-            ],
-        },
-        liveStats: { totalRooms: 200, occupiedRooms: 185 },
-        verdict: 'Most convenient option. Zero commute time.',
-        sentimentTags: ['On Campus', 'Secure', 'Social Life'],
-        ownerId: { name: 'DSU Admin' }
-    },
-    'green-view': {
-        _id: 'mock-id-3',
-        title: 'Green View Residency',
-        slug: 'green-view',
-        description: 'A budget-friendly option with a great community vibe. Located near the bus stand, making travel easy. Perfect for students who want freedom and affordability.',
-        location: {
-            lat: 12.643,
-            lng: 77.435,
-            address: 'Near Bus Stand, Harohalli',
-        },
-        price: { amount: 4500, period: 'monthly' },
-        amenities: ['WiFi', '2 Times Food', 'Hot Water', 'No Curfew', 'Bike Parking'],
-        media: {
-            images: [
-                'https://images.unsplash.com/photo-1522771753037-6333d7911961?ixlib=rb-4.0.3&auto=format&fit=crop&w=2051&q=80',
-                'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-            ],
-        },
-        liveStats: { totalRooms: 30, occupiedRooms: 28 },
-        verdict: 'Best budget option. Great for seniors.',
-        sentimentTags: ['Budget', 'Freedom', 'Chill Vibe'],
-        ownerId: { name: 'Mr. Gowda' }
-    }
-};
-
 async function getProperty(slug: string) {
-    // Forcing mock data to ensure UI works while DB is down
-    return MOCK_PROPERTIES[slug] || MOCK_PROPERTIES['sai-balaji-pg'];
-
-    /* 
-    try {
-        await dbConnect();
-        const property = await Property.findOne({ slug }).populate('ownerId', 'name').lean();
-        return property || MOCK_PROPERTIES[slug] || MOCK_PROPERTIES['sai-balaji-pg']; // Fallback to specific mock or default
-    } catch (e) {
-        console.error("DB Error, using mock", e);
-        return MOCK_PROPERTIES[slug] || MOCK_PROPERTIES['sai-balaji-pg'];
-    }
-    */
+    await dbConnect();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const property = await Property.findOne({ slug }).lean() as any;
+    return property;
 }
 
 export default async function PropertyPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -115,10 +30,12 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
             {/* Immersive Header Image */}
             <div className="relative h-[60vh] w-full overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent z-10" />
-                <img
+                <Image
                     src={property.media.images[0]}
                     alt={property.title}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    priority
                 />
                 <div className="absolute bottom-0 left-0 right-0 z-20 container mx-auto px-4 pb-12">
                     <ScrollReveal>
@@ -161,11 +78,32 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
                                     </div>
                                 </div>
                                 <TabsContent value="photos" className="mt-0">
-                                    <div className="grid grid-cols-2 gap-2 rounded-2xl overflow-hidden aspect-video">
-                                        <img src={property.media.images[0]} className="w-full h-full object-cover" />
+                                    <div className="grid grid-cols-2 gap-2 rounded-2xl overflow-hidden aspect-video relative">
+                                        <div className="relative w-full h-full">
+                                            <Image
+                                                src={property.media.images[0]}
+                                                alt="Main view"
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        </div>
                                         <div className="grid grid-rows-2 gap-2">
-                                            <img src={property.media.images[1] || property.media.images[0]} className="w-full h-full object-cover" />
-                                            <img src={property.media.images[2] || property.media.images[0]} className="w-full h-full object-cover" />
+                                            <div className="relative w-full h-full">
+                                                <Image
+                                                    src={property.media.images[1] || property.media.images[0]}
+                                                    alt="Secondary view 1"
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            </div>
+                                            <div className="relative w-full h-full">
+                                                <Image
+                                                    src={property.media.images[2] || property.media.images[0]}
+                                                    alt="Secondary view 2"
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </TabsContent>

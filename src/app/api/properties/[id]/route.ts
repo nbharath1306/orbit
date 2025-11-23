@@ -24,7 +24,6 @@ export async function PATCH(
         }
 
         // Check ownership
-        // @ts-ignore
         if (property.ownerId.toString() !== session.user.id && session.user.role !== 'admin') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }

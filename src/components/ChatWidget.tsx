@@ -26,7 +26,7 @@ export function ChatWidget() {
                 <PopoverContent className="w-80 p-0 bg-zinc-900 border-zinc-800" align="end" sideOffset={10}>
                     <div className="p-4 bg-zinc-800/50 border-b border-zinc-800 rounded-t-lg">
                         <h3 className="font-bold text-white">Orbit Assistant</h3>
-                        <p className="text-xs text-zinc-400">How can we help you today?</p>
+                        <p className="text-sm text-zinc-400">I&apos;m Orbit AI. Ask me anything about PGs!</p>
                     </div>
                     <div className="p-2 grid gap-2">
                         <Button variant="ghost" className="justify-start h-auto py-3 px-4 hover:bg-zinc-800" onClick={() => window.open('https://maps.google.com', '_blank')}>
@@ -34,7 +34,7 @@ export function ChatWidget() {
                                 <Map className="h-4 w-4 text-blue-500" />
                             </div>
                             <div className="text-left">
-                                <div className="font-medium">I'm Lost</div>
+                                <div className="font-medium">I&apos;m Lost</div>
                                 <div className="text-xs text-zinc-500">Get directions & help</div>
                             </div>
                         </Button>

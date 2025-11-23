@@ -18,7 +18,6 @@ export async function POST(request: Request) {
     try {
         // Create Booking
         const booking = await Booking.create({
-            // @ts-ignore
             studentId: session.user.id,
             propertyId,
             status: 'paid', // Mock success

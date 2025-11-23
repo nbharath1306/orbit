@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Minus, Loader2 } from 'lucide-react';
+import { Plus, Minus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export function LiveStatsCounter({ propertyId, initialCount, total }: { propertyId: string, initialCount: number, total: number }) {

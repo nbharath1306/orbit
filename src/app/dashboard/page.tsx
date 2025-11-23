@@ -7,7 +7,6 @@ import Property from '@/models/Property';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Plus, Minus } from 'lucide-react';
 import { LiveStatsCounter } from '@/components/LiveStatsCounter';
 
 export default async function DashboardPage() {
@@ -19,9 +18,7 @@ export default async function DashboardPage() {
 
     await dbConnect();
 
-    // @ts-ignore
     const role = session.user.role;
-    // @ts-ignore
     const userId = session.user.id;
 
     if (role === 'student') {
@@ -40,8 +37,9 @@ export default async function DashboardPage() {
                         <p className="text-zinc-500">No bookings yet.</p>
                     ) : (
                         <div className="grid gap-4">
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {bookings.map((booking: any) => (
-                                <Card key={booking._id} className="bg-zinc-900 border-zinc-800">
+                                <Card key={booking._id.toString()} className="bg-zinc-900 border-zinc-800">
                                     <CardHeader>
                                         <div className="flex justify-between items-center">
                                             <CardTitle>{booking.propertyId.title}</CardTitle>
@@ -81,8 +79,9 @@ export default async function DashboardPage() {
                 <div className="space-y-6">
                     <h2 className="text-xl font-semibold">My Listings & Live Stats</h2>
                     <div className="grid gap-6">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {properties.map((prop: any) => (
-                            <Card key={prop._id} className="bg-zinc-900 border-zinc-800">
+                            <Card key={prop._id.toString()} className="bg-zinc-900 border-zinc-800">
                                 <CardHeader>
                                     <div className="flex justify-between items-start">
                                         <div>

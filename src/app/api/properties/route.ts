@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     const search = searchParams.get('search');
     const type = searchParams.get('type'); // e.g. 'gender' if we had it, or other filters
 
-    let query: any = {};
+    const query: any = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     if (search) {
         query.$or = [
@@ -31,7 +31,6 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     const session = await getServerSession(authOptions);
 
-    // @ts-ignore
     if (!session || session.user.role !== 'owner' && session.user.role !== 'admin') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -42,7 +41,6 @@ export async function POST(request: Request) {
     try {
         const property = await Property.create({
             ...body,
-            // @ts-ignore
             ownerId: session.user.id, // Assuming we attach ID to session
         });
         return NextResponse.json(property, { status: 201 });

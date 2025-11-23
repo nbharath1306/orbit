@@ -6,6 +6,8 @@ export interface IBooking extends Document {
     status: 'pending' | 'paid' | 'confirmed' | 'rejected';
     paymentId?: string;
     amountPaid: number;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 const BookingSchema: Schema<IBooking> = new Schema(

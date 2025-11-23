@@ -6,10 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Search as SearchIcon, MapPin, Star, Filter } from 'lucide-react';
 import dbConnect from '@/lib/db';
 import Property from '@/models/Property';
+import { FilterQuery } from 'mongoose';
+import { IProperty } from '@/models/Property';
 
 async function getProperties(search: string) {
     await dbConnect();
-    let query: any = {};
+    const query: FilterQuery<IProperty> = {};
     if (search) {
         query.$or = [
             { title: { $regex: search, $options: 'i' } },
@@ -61,6 +63,7 @@ export default async function SearchPage({
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {properties.map((prop: any) => (
                         <Link href={`/pg/${prop.slug}`} key={prop._id}>
                             <Card className="bg-zinc-900 border-zinc-800 hover:border-blue-500/50 transition-all duration-300 h-full overflow-hidden group">

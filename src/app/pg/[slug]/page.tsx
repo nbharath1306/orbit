@@ -14,12 +14,35 @@ import { Button } from '@/components/ui/button';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+// Helper function to ensure we have 4 valid images with fallbacks
+function ensureValidImages(property: any) {
+    const placeholders = [
+        `https://placehold.co/800x600/1e40af/ffffff?text=${encodeURIComponent(property.title + ' - Room')}`,
+        `https://placehold.co/800x600/059669/ffffff?text=${encodeURIComponent(property.title + ' - Area')}`,
+        `https://placehold.co/800x600/dc2626/ffffff?text=${encodeURIComponent(property.title + ' - View')}`,
+        `https://placehold.co/800x600/7c3aed/ffffff?text=${encodeURIComponent(property.title + ' - Facility')}`
+    ];
+
+    // Ensure we have at least 4 images
+    const images = property.media?.images || [];
+    while (images.length < 4) {
+        images.push(placeholders[images.length]);
+    }
+
+    return {
+        ...property,
+        media: {
+            ...property.media,
+            images: images.slice(0, 4) // Ensure exactly 4 images
+        }
+    };
+}
 
 async function getProperty(slug: string) {
     await dbConnect();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const property = await Property.findOne({ slug }).lean() as any;
-    return property;
+    return property ? ensureValidImages(property) : null;
 }
 
 export default async function PropertyPage({ params }: { params: Promise<{ slug: string }> }) {

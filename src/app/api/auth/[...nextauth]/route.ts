@@ -1,5 +1,4 @@
 import NextAuth, { NextAuthOptions } from 'next-auth';
-import GoogleProvider from 'next-auth/providers/google';
 import Auth0Provider from 'next-auth/providers/auth0';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import dbConnect from '@/lib/db';
@@ -7,10 +6,6 @@ import User from '@/models/User';
 
 export const authOptions: NextAuthOptions = {
     providers: [
-        GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID || 'mock_client_id',
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'mock_client_secret',
-        }),
         Auth0Provider({
             clientId: process.env.AUTH0_CLIENT_ID || '',
             clientSecret: process.env.AUTH0_CLIENT_SECRET || '',
@@ -52,7 +47,7 @@ export const authOptions: NextAuthOptions = {
     ],
     callbacks: {
         async signIn({ user, account }) {
-            if (account?.provider === 'google' || account?.provider === 'auth0') {
+            if (account?.provider === 'auth0') {
                 await dbConnect();
                 const existingUser = await User.findOne({ email: user.email });
                 if (!existingUser) {

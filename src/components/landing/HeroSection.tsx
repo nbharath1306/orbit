@@ -48,7 +48,7 @@ export default function HeroSection() {
                 <div className="max-w-[90vw] mx-auto">
                     {/* Main Typography - Kinetic & Big */}
                     <div className="mb-12 relative">
-                        <h1 className="text-[11vw] md:text-[13vw] leading-[0.8] font-bold tracking-tighter text-white mb-4 select-none mix-blend-difference">
+                        <h1 className="text-5xl md:text-7xl lg:text-8xl leading-[0.9] font-bold tracking-tighter text-white mb-8 select-none mix-blend-difference">
                             <TextReveal delay={0.1}>STUDENT</TextReveal>
                             <br />
                             <span className="text-zinc-700">
@@ -58,7 +58,7 @@ export default function HeroSection() {
                             <span className="relative inline-block">
                                 <TextReveal delay={0.5}>ELEVATED.</TextReveal>
                                 <motion.div 
-                                    className="absolute -right-4 md:-right-12 top-2 md:top-8 w-4 h-4 md:w-8 md:h-8 bg-blue-600 rounded-full"
+                                    className="absolute -right-3 md:-right-6 top-1 md:top-2 w-2 h-2 md:w-4 md:h-4 bg-blue-600 rounded-full"
                                     initial={{ scale: 0 }}
                                     animate={{ scale: [1, 1.2, 1] }}
                                     transition={{ duration: 2, repeat: Infinity, delay: 1 }}

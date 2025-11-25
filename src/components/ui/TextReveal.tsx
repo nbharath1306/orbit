@@ -15,7 +15,7 @@ export function TextReveal({ children, className, delay = 0 }: TextRevealProps) 
     const words = children.split(" ");
 
     return (
-        <div ref={ref} className={className} style={{ overflow: 'hidden' }}>
+        <span ref={ref} className={className} style={{ overflow: 'hidden', display: 'inline-block', verticalAlign: 'bottom' }}>
             {words.map((word, i) => (
                 <motion.span
                     key={i}
@@ -31,6 +31,6 @@ export function TextReveal({ children, className, delay = 0 }: TextRevealProps) 
                     {word}
                 </motion.span>
             ))}
-        </div>
+        </span>
     );
 }

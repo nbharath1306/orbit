@@ -1,9 +1,11 @@
 'use client';
 
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Search, MapPin, ArrowUpRight } from 'lucide-react';
 import { useRef, useState, useEffect } from 'react';
+import { TextReveal } from '@/components/ui/TextReveal';
+import Magnetic from '@/components/ui/Magnetic';
 
 export default function HeroSection() {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -45,33 +47,31 @@ export default function HeroSection() {
             <div className="container mx-auto px-4 relative z-40">
                 <div className="max-w-[90vw] mx-auto">
                     {/* Main Typography - Kinetic & Big */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 100 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                        className="mb-12 relative"
-                    >
-                        <h1 className="text-[11vw] md:text-[13vw] leading-[0.8] font-bold tracking-tighter text-white mb-4 select-none mix-blend-difference">
-                            STUDENT
+                    <div className="mb-12 relative">
+                        <h1 className="text-5xl md:text-7xl lg:text-8xl leading-[0.9] font-bold tracking-tighter text-white mb-8 select-none mix-blend-difference">
+                            <TextReveal delay={0.1}>STUDENT</TextReveal>
                             <br />
-                            <span className="text-zinc-700">LIVING.</span>
+                            <span className="text-zinc-700">
+                                <TextReveal delay={0.3}>LIVING.</TextReveal>
+                            </span>
                             <br />
                             <span className="relative inline-block">
-                                ELEVATED.
+                                <TextReveal delay={0.5}>ELEVATED.</TextReveal>
                                 <motion.div 
-                                    className="absolute -right-4 md:-right-12 top-2 md:top-8 w-4 h-4 md:w-8 md:h-8 bg-blue-600 rounded-full"
+                                    className="absolute -right-3 md:-right-6 top-1 md:top-2 w-2 h-2 md:w-4 md:h-4 bg-blue-600 rounded-full"
+                                    initial={{ scale: 0 }}
                                     animate={{ scale: [1, 1.2, 1] }}
-                                    transition={{ duration: 2, repeat: Infinity }}
+                                    transition={{ duration: 2, repeat: Infinity, delay: 1 }}
                                 />
                             </span>
                         </h1>
-                    </motion.div>
+                    </div>
 
                     {/* Search Bar - Glass & Blur */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                        transition={{ duration: 0.8, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
                         className="w-full max-w-2xl relative z-50"
                     >
                         <div className="bg-zinc-900/80 backdrop-blur-2xl border border-white/10 p-2 rounded-full flex items-center gap-2 pl-6 pr-2 h-16 group focus-within:border-white/30 focus-within:ring-1 focus-within:ring-white/20 transition-all shadow-2xl shadow-black/50">
@@ -81,9 +81,11 @@ export default function HeroSection() {
                                 placeholder="Search by college or city..." 
                                 className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-zinc-600 text-lg"
                             />
-                            <Button className="rounded-full h-12 px-8 bg-white text-black hover:bg-zinc-200 font-medium text-base transition-all hover:scale-105 active:scale-95">
-                                Search
-                            </Button>
+                            <Magnetic>
+                                <Button className="rounded-full h-12 px-8 bg-white text-black hover:bg-zinc-200 font-medium text-base transition-all hover:scale-105 active:scale-95">
+                                    Search
+                                </Button>
+                            </Magnetic>
                         </div>
                         
                         <div className="mt-6 flex gap-4 text-sm text-zinc-500 font-medium">

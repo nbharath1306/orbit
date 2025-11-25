@@ -2,32 +2,45 @@ import HeroSection from '@/components/landing/HeroSection';
 import WhyOrbit from '@/components/landing/WhyOrbit';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { Button } from '@/components/ui/button';
+import Magnetic from '@/components/ui/Magnetic';
 import { MapPin, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
-import dbConnect from '@/lib/db';
-import Property from '@/models/Property';
 
-async function getFeaturedProperties() {
-    await dbConnect();
-    // Fetch 3 properties, lean() for plain JS objects
-    const properties = await Property.find({})
-        .limit(3)
-        .lean();
-    
-    return properties.map(prop => ({
-        id: prop._id.toString(),
-        title: prop.title,
-        slug: prop.slug,
-        location: prop.location.address.split(',')[0], // Just the first part of address
-        price: prop.price.amount,
-        image: prop.media.images[0],
-        tags: prop.sentimentTags.slice(0, 2) // Take first 2 tags
-    }));
-}
+// Mock Data for Featured Properties
+const FEATURED_PROPERTIES = [
+	{
+		id: '1',
+		title: 'Sai Balaji PG',
+		slug: 'sai-balaji-pg',
+		location: 'Harohalli, Karnataka',
+		price: 6500,
+		image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=2069&q=80',
+		rating: 4.5,
+		tags: ['Premium', 'Food Included'],
+	},
+	{
+		id: '2',
+		title: 'DSU Hostels',
+		slug: 'dsu-hostels',
+		location: 'DSU Campus',
+		price: 9000,
+		image: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
+		rating: 4.2,
+		tags: ['On Campus', 'Secure'],
+	},
+	{
+		id: '3',
+		title: 'Green View Residency',
+		slug: 'green-view',
+		location: 'Near Bus Stand',
+		price: 4500,
+		image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80',
+		rating: 3.8,
+		tags: ['Budget', 'Freedom'],
+	},
+];
 
-export default async function Home() {
-    const featuredProperties = await getFeaturedProperties();
-
+export default function Home() {
 	return (
 		<div className='min-h-screen bg-black text-zinc-100 selection:bg-white selection:text-black'>
 			<HeroSection />
@@ -47,18 +60,20 @@ export default async function Home() {
 
 						<ScrollReveal delay={0.2}>
 							<Link href='/search'>
-								<Button
-									variant='outline'
-									className='rounded-full border-zinc-700 text-white hover:bg-white hover:text-black transition-all h-12 px-8 text-base'
-								>
-									View All Properties
-								</Button>
+								<Magnetic>
+									<Button
+										variant='outline'
+										className='rounded-full border-zinc-700 text-white hover:bg-white hover:text-black transition-all h-12 px-8 text-base'
+									>
+										View All Properties
+									</Button>
+								</Magnetic>
 							</Link>
 						</ScrollReveal>
 					</div>
 
 					<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-						{featuredProperties.map((prop, i) => (
+						{FEATURED_PROPERTIES.map((prop, i) => (
 							<ScrollReveal key={prop.id} delay={0.3 + i * 0.15}>
 								<Link href={`/pg/${prop.slug}`} className='group block relative cursor-pointer' prefetch={true}>
 									<div className='relative aspect-[3/4] overflow-hidden rounded-2xl bg-zinc-900 transition-transform duration-300 active:scale-95'>
@@ -128,12 +143,16 @@ export default async function Home() {
 								Join thousands of students who found their dream home with Orbit. Verified
 								properties, instant booking, zero hassle.
 							</p>
-							<Button
-								size='lg'
-								className='bg-white text-black hover:bg-zinc-200 rounded-full px-12 h-16 text-xl font-bold transition-all hover:scale-105'
-							>
-								Get Started Now
-							</Button>
+							<div className="flex justify-center">
+								<Magnetic>
+									<Button
+										size='lg'
+										className='bg-white text-black hover:bg-zinc-200 rounded-full px-12 h-16 text-xl font-bold transition-all hover:scale-105'
+									>
+										Get Started Now
+									</Button>
+								</Magnetic>
+							</div>
 						</div>
 					</ScrollReveal>
 				</div>

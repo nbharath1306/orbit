@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import Lenis from 'lenis';
+import { CustomCursor } from '@/components/ui/CustomCursor';
+import { NoiseOverlay } from '@/components/ui/NoiseOverlay';
+import { Preloader } from '@/components/ui/Preloader';
+import { Footer } from '@/components/Footer';
 
 export function ClientLayoutContent({ children }: { children: React.ReactNode }) {
     const [mounted, setMounted] = useState(false);
@@ -10,12 +14,12 @@ export function ClientLayoutContent({ children }: { children: React.ReactNode })
 
     useEffect(() => {
         const lenis = new Lenis({
-            duration: 1.2,
+            duration: 1.5,
             easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
             orientation: 'vertical',
             gestureOrientation: 'vertical',
             smoothWheel: true,
-            wheelMultiplier: 1,
+            wheelMultiplier: 0.8,
             touchMultiplier: 2,
         });
 
@@ -47,10 +51,14 @@ export function ClientLayoutContent({ children }: { children: React.ReactNode })
 
     return (
         <>
+            <Preloader />
+            <CustomCursor />
+            <NoiseOverlay />
             {mounted && NavbarComponent ? <NavbarComponent /> : <div className="h-16 border-b border-zinc-800" />}
             <main className="flex-1">
                 {children}
             </main>
+            <Footer />
             {mounted && ChatComponent && <ChatComponent />}
         </>
     );

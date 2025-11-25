@@ -9,6 +9,7 @@ export interface IUser extends Document {
     phone?: string;
     university?: 'DSU' | 'Jain' | 'Other';
     blacklisted: boolean;
+    password?: string;
 }
 
 const UserSchema: Schema<IUser> = new Schema(
@@ -16,6 +17,7 @@ const UserSchema: Schema<IUser> = new Schema(
         name: { type: String, required: true },
         email: { type: String, required: true, unique: true },
         image: { type: String },
+        password: { type: String },
         role: {
             type: String,
             enum: ['student', 'owner', 'admin'],

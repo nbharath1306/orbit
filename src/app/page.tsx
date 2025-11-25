@@ -45,124 +45,159 @@ export default function Home() {
 		<div className='min-h-screen bg-black text-zinc-100 selection:bg-white selection:text-black'>
 			<HeroSection />
 
-			{/* Value Proposition Section - Bento Grid */}
-			<section className='py-32 px-4 border-t border-zinc-900'>
-				<div className='container mx-auto'>
+			{/* Value Proposition Section - Bento Grid v2 */}
+			<section className='py-32 px-4 border-t border-zinc-900 bg-zinc-950 relative overflow-hidden'>
+				{/* Background Elements */}
+				<div className='absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-800/20 via-zinc-950/0 to-zinc-950/0 pointer-events-none' />
+				
+				<div className='container mx-auto relative z-10'>
 					<ScrollReveal>
-						<h2 className='text-4xl md:text-6xl font-bold tracking-tighter text-white mb-16'>
-							WHY <span className='text-zinc-600'>ORBIT?</span>
-						</h2>
+						<div className='mb-20 max-w-3xl'>
+							<h2 className='text-5xl md:text-7xl font-bold tracking-tighter text-white mb-6'>
+								NOT JUST A <br />
+								<span className='text-zinc-600'>LISTING PLATFORM.</span>
+							</h2>
+							<p className='text-xl text-zinc-400 leading-relaxed'>
+								We've rebuilt the student housing experience from the ground up. 
+								No brokers, no fake photos, no surprises. Just seamless living.
+							</p>
+						</div>
 					</ScrollReveal>
 
-					<div className='grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 h-auto md:h-[600px]'>
-						{/* Large Card - Verified */}
+					<div className='grid grid-cols-1 md:grid-cols-4 grid-rows-3 gap-4 md:gap-6 h-auto md:h-[800px]'>
+						
+						{/* Card 1: The Orbit Verdict (Large Feature) */}
 						<ScrollReveal className='md:col-span-2 md:row-span-2 h-full' width='100%'>
-							<div className='group relative h-full w-full bg-zinc-900 rounded-3xl p-8 overflow-hidden border border-zinc-800 hover:border-zinc-700 transition-all'>
-								{/* Background Image */}
-								<div className='absolute inset-0 bg-[url("https://images.unsplash.com/photo-1522771753035-4a50356c6518?q=80&w=2670&auto=format&fit=crop")] bg-cover bg-center opacity-30 group-hover:scale-105 transition-transform duration-700' />
-								<div className='absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent' />
-
-								{/* Floating Badge */}
-								<div className='absolute top-8 right-8 bg-green-500/20 backdrop-blur-md border border-green-500/30 text-green-400 px-4 py-2 rounded-full flex items-center gap-2'>
-									<Shield className='w-4 h-4 fill-current' />
-									<span className='text-sm font-bold uppercase tracking-wider'>Verified</span>
-								</div>
-
-								{/* Checklist Visual */}
-								<div className='absolute top-1/2 left-8 -translate-y-1/2 space-y-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform translate-x-[-20px] group-hover:translate-x-0 hidden md:block'>
-									{['Physically Visited', 'Owner Verified', 'Amenities Checked'].map((item, i) => (
-										<div
-											key={i}
-											className='flex items-center gap-3 bg-black/50 backdrop-blur-sm p-3 rounded-xl border border-white/10 w-fit'
-										>
-											<div className='bg-green-500 rounded-full p-1'>
-												<Check className='w-3 h-3 text-black' />
-											</div>
-											<span className='text-white font-medium'>{item}</span>
+							<div className='group relative h-full w-full bg-zinc-900 rounded-3xl p-8 overflow-hidden border border-zinc-800 hover:border-zinc-600 transition-all duration-500'>
+								<div className='absolute inset-0 bg-[url("https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=2500&auto=format&fit=crop")] bg-cover bg-center opacity-20 group-hover:opacity-30 transition-opacity duration-700' />
+								<div className='absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent' />
+								
+								{/* Floating UI: The Verdict Card */}
+								<div className='absolute top-8 right-8 w-64 bg-zinc-950/90 backdrop-blur-xl border border-zinc-800 p-4 rounded-2xl shadow-2xl transform rotate-3 group-hover:rotate-0 transition-transform duration-500'>
+									<div className='flex justify-between items-center mb-4'>
+										<span className='text-xs font-bold text-zinc-400 uppercase tracking-wider'>Orbit Verdict</span>
+										<div className='bg-green-500/20 text-green-400 text-xs font-bold px-2 py-1 rounded'>9.8/10</div>
+									</div>
+									<div className='space-y-2'>
+										<div className='flex items-center gap-2 text-sm text-zinc-300'>
+											<Check className='w-4 h-4 text-green-500' /> <span>Hygiene Verified</span>
 										</div>
-									))}
+										<div className='flex items-center gap-2 text-sm text-zinc-300'>
+											<Check className='w-4 h-4 text-green-500' /> <span>Internet Speed Test</span>
+										</div>
+										<div className='flex items-center gap-2 text-sm text-zinc-300'>
+											<Check className='w-4 h-4 text-green-500' /> <span>Food Tasted</span>
+										</div>
+									</div>
 								</div>
 
 								<div className='relative z-10 h-full flex flex-col justify-end'>
-									<h3 className='text-3xl md:text-5xl font-bold text-white mb-4'>
-										100% Verified Listings
-									</h3>
-									<p className='text-zinc-300 text-lg max-w-md'>
-										Every property is physically visited and verified by our expert team. No fake
-										listings, no surprises.
+									<div className='w-16 h-16 bg-white text-black rounded-2xl flex items-center justify-center mb-6'>
+										<Shield className='w-8 h-8' />
+									</div>
+									<h3 className='text-3xl md:text-4xl font-bold text-white mb-4'>The Orbit Verdict™</h3>
+									<p className='text-zinc-400 text-lg max-w-md'>
+										We don't just list properties. We audit them. Our team physically visits every PG to verify amenities, hygiene, and safety.
 									</p>
 								</div>
 							</div>
 						</ScrollReveal>
 
-						{/* Small Card 1 - Instant Booking */}
-						<ScrollReveal className='h-full' width='100%' delay={0.3}>
-							<div className='group relative h-full min-h-[250px] bg-zinc-900 rounded-3xl p-8 border border-zinc-800 hover:bg-zinc-800/50 transition-all overflow-hidden'>
-								{/* Decorative Gradient */}
-								<div className='absolute top-0 right-0 w-32 h-32 bg-blue-500/20 blur-[50px] rounded-full group-hover:bg-blue-500/30 transition-colors' />
-
-								{/* Mock UI Element */}
-								<div className='absolute top-8 right-8 bg-zinc-800/80 backdrop-blur border border-white/10 p-4 rounded-2xl shadow-xl transform rotate-6 group-hover:rotate-0 transition-transform duration-500'>
-									<div className='flex items-center gap-3 mb-2'>
-										<div className='w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center'>
-											<Check className='w-4 h-4 text-green-500' />
+						{/* Card 2: Zero Brokerage (Tall) */}
+						<ScrollReveal className='md:col-span-1 md:row-span-2 h-full' width='100%' delay={0.1}>
+							<div className='group relative h-full bg-zinc-900 rounded-3xl p-6 border border-zinc-800 hover:bg-zinc-800/50 transition-all overflow-hidden flex flex-col'>
+								<div className='absolute top-0 right-0 p-32 bg-green-500/10 blur-[80px] rounded-full' />
+								
+								<div className='flex-1 flex items-center justify-center'>
+									<div className='relative'>
+										<div className='text-[8rem] font-bold text-zinc-800 group-hover:text-zinc-700 transition-colors leading-none'>0%</div>
+										<div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl font-bold text-white bg-zinc-900 px-4 py-2 border border-zinc-700 rounded-full whitespace-nowrap'>
+											BROKERAGE
 										</div>
-										<div>
-											<div className='h-2 w-16 bg-zinc-600 rounded mb-1' />
-											<div className='h-2 w-10 bg-zinc-700 rounded' />
-										</div>
-									</div>
-									<div className='h-8 w-full bg-blue-600 rounded-lg flex items-center justify-center text-[10px] font-bold text-white'>
-										BOOKED
 									</div>
 								</div>
 
-								<div className='relative z-10 h-full flex flex-col justify-end'>
-									<div className='w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform'>
+								<div className='relative z-10 mt-auto'>
+									<h3 className='text-xl font-bold text-white mb-2'>Direct Booking</h3>
+									<p className='text-zinc-400 text-sm'>Connect directly with owners. Save up to ₹15,000 in hidden fees.</p>
+								</div>
+							</div>
+						</ScrollReveal>
+
+						{/* Card 3: Live Inventory (Standard) */}
+						<ScrollReveal className='md:col-span-1 md:row-span-1 h-full' width='100%' delay={0.2}>
+							<div className='group relative h-full bg-zinc-900 rounded-3xl p-6 border border-zinc-800 hover:border-blue-500/50 transition-all overflow-hidden'>
+								<div className='absolute top-4 right-4 flex items-center gap-2'>
+									<span className='relative flex h-3 w-3'>
+										<span className='animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75'></span>
+										<span className='relative inline-flex rounded-full h-3 w-3 bg-blue-500'></span>
+									</span>
+									<span className='text-xs font-bold text-blue-400 uppercase'>Live</span>
+								</div>
+
+								<div className='h-full flex flex-col justify-end'>
+									<Zap className='w-8 h-8 text-white mb-4' />
+									<h3 className='text-xl font-bold text-white mb-1'>Real-time Inventory</h3>
+									<p className='text-zinc-500 text-xs'>No "calling to check". If it's listed, it's available.</p>
+								</div>
+							</div>
+						</ScrollReveal>
+
+						{/* Card 4: Community (Standard) */}
+						<ScrollReveal className='md:col-span-1 md:row-span-1 h-full' width='100%' delay={0.3}>
+							<div className='group relative h-full bg-zinc-900 rounded-3xl p-6 border border-zinc-800 hover:border-purple-500/50 transition-all overflow-hidden'>
+								<div className='absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity' />
+								
+								<div className='h-full flex flex-col justify-end'>
+									<Users className='w-8 h-8 text-white mb-4' />
+									<h3 className='text-xl font-bold text-white mb-1'>Student Community</h3>
+									<p className='text-zinc-500 text-xs'>Events, gaming nights, and a network of peers.</p>
+								</div>
+							</div>
+						</ScrollReveal>
+
+						{/* Card 5: Smart Amenities (Wide) */}
+						<ScrollReveal className='md:col-span-2 md:row-span-1 h-full' width='100%' delay={0.4}>
+							<div className='group relative h-full bg-zinc-900 rounded-3xl p-8 border border-zinc-800 hover:bg-zinc-800/50 transition-all overflow-hidden flex items-center justify-between'>
+								<div className='relative z-10'>
+									<h3 className='text-2xl font-bold text-white mb-2'>Smart Living</h3>
+									<p className='text-zinc-400 text-sm max-w-xs'>High-speed WiFi, biometric security, and app-based issue reporting.</p>
+								</div>
+								
+								<div className='flex gap-4 opacity-50 group-hover:opacity-100 transition-opacity'>
+									<div className='w-12 h-12 bg-zinc-800 rounded-xl flex items-center justify-center border border-zinc-700'>
 										<Zap className='w-6 h-6 text-white' />
 									</div>
-									<h3 className='text-2xl font-bold text-white mb-2'>Instant Booking</h3>
-									<p className='text-zinc-400 text-sm'>
-										Skip the wait. Secure your room in under 5 minutes.
-									</p>
+									<div className='w-12 h-12 bg-zinc-800 rounded-xl flex items-center justify-center border border-zinc-700'>
+										<Shield className='w-6 h-6 text-white' />
+									</div>
+									<div className='w-12 h-12 bg-zinc-800 rounded-xl flex items-center justify-center border border-zinc-700'>
+										<Star className='w-6 h-6 text-white' />
+									</div>
 								</div>
 							</div>
 						</ScrollReveal>
 
-						{/* Small Card 2 - Hyper Local */}
-						<ScrollReveal className='h-full' width='100%' delay={0.4}>
-							<div className='group relative h-full min-h-[250px] bg-zinc-900 rounded-3xl p-8 border border-zinc-800 hover:bg-zinc-800/50 transition-all overflow-hidden'>
-								{/* Map Pattern */}
-								<div
-									className='absolute inset-0 opacity-20'
-									style={{
-										backgroundImage: 'radial-gradient(#4f4f4f 1px, transparent 1px)',
-										backgroundSize: '20px 20px',
-									}}
+						{/* Card 6: Location (Wide) */}
+						<ScrollReveal className='md:col-span-2 md:row-span-1 h-full' width='100%' delay={0.5}>
+							<div className='group relative h-full bg-zinc-900 rounded-3xl p-8 border border-zinc-800 hover:border-zinc-700 transition-all overflow-hidden'>
+								<div className='absolute inset-0 opacity-20' 
+									style={{ backgroundImage: 'radial-gradient(#4f4f4f 1px, transparent 1px)', backgroundSize: '20px 20px' }} 
 								/>
-
-								{/* Floating Pins */}
-								<div className='absolute top-10 right-10'>
-									<div className='relative'>
-										<div className='absolute -top-8 -right-4 bg-white text-black text-[10px] font-bold px-2 py-1 rounded shadow-lg transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all'>
-											DSU Campus
-										</div>
-										<MapPin className='w-6 h-6 text-red-500 animate-bounce' />
-										<div className='w-6 h-1 bg-red-500/50 blur-sm rounded-full mt-1' />
+								
+								<div className='flex items-center justify-between relative z-10 h-full'>
+									<div>
+										<h3 className='text-2xl font-bold text-white mb-2'>Hyper Local</h3>
+										<p className='text-zinc-400 text-sm'>Properties within <span className='text-white font-bold'>2km</span> of your campus.</p>
 									</div>
-								</div>
-
-								<div className='relative z-10 h-full flex flex-col justify-end'>
-									<div className='w-12 h-12 bg-zinc-800 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-white group-hover:text-black transition-colors'>
-										<MapPin className='w-6 h-6' />
+									<div className='bg-white text-black px-4 py-2 rounded-full font-bold text-sm flex items-center gap-2'>
+										<MapPin className='w-4 h-4' />
+										Find Near Me
 									</div>
-									<h3 className='text-2xl font-bold text-white mb-2'>Hyper Local</h3>
-									<p className='text-zinc-400 text-sm'>
-										Curated specifically for your campus and surrounding areas.
-									</p>
 								</div>
 							</div>
 						</ScrollReveal>
+
 					</div>
 				</div>
 			</section>

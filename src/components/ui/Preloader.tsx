@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Logo } from '@/components/ui/Logo';
 
 export function Preloader() {
     const [isLoading, setIsLoading] = useState(true);
@@ -30,10 +31,8 @@ export function Preloader() {
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ duration: 0.5, ease: "easeOut" }}
-                            className="flex items-center gap-2"
                         >
-                            <div className="w-4 h-4 bg-white rounded-full animate-pulse" />
-                            <span className="text-2xl font-bold text-white tracking-tighter">ORBIT</span>
+                            <Logo className="text-white scale-150" />
                         </motion.div>
                         
                         <div className="w-48 h-1 bg-zinc-900 rounded-full overflow-hidden">

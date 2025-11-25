@@ -12,10 +12,11 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Rocket, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import Magnetic from '@/components/ui/Magnetic';
+import { Logo } from '@/components/ui/Logo';
 
 export function Navbar() {
     const { data: session } = useSession();
@@ -40,13 +41,8 @@ export function Navbar() {
         >
             <div className="container mx-auto px-4 flex items-center justify-between">
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-2 group">
-                    <div className="bg-white p-1.5 rounded-lg transition-transform group-hover:scale-110">
-                        <Rocket className="h-5 w-5 text-black" />
-                    </div>
-                    <span className="text-xl font-bold tracking-tight text-white">
-                        Orbit
-                    </span>
+                <Link href="/" className="group">
+                    <Logo className="text-white transition-transform group-hover:scale-105" />
                 </Link>
 
                 {/* Actions */}

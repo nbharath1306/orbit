@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Rocket, Instagram, Twitter, Linkedin, Github } from 'lucide-react';
+import { Instagram, Twitter, Linkedin, Github } from 'lucide-react';
 import Magnetic from '@/components/ui/Magnetic';
+import { Logo } from '@/components/ui/Logo';
 
 export function Footer() {
     return (
@@ -12,11 +13,8 @@ export function Footer() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">
                     {/* Brand */}
                     <div className="space-y-6">
-                        <Link href="/" className="flex items-center gap-2 group">
-                            <div className="bg-white p-1.5 rounded-lg transition-transform group-hover:scale-110">
-                                <Rocket className="h-5 w-5 text-black" />
-                            </div>
-                            <span className="text-xl font-bold tracking-tight">Orbit</span>
+                        <Link href="/" className="inline-block group">
+                            <Logo className="text-white transition-transform group-hover:scale-105" />
                         </Link>
                         <p className="text-zinc-400 max-w-xs">
                             Redefining student living with premium spaces, verified listings, and a vibrant community.

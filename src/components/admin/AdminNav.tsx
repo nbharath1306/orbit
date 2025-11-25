@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { LogOut, Settings, ChevronUp, ChevronDown, User, Shield, Eye, Database, Key } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useState, useRef, useEffect } from 'react';
+import { Logo } from '@/components/ui/Logo';
 
 export function AdminNav() {
   const pathname = usePathname();
@@ -28,65 +29,58 @@ export function AdminNav() {
   }, []);
 
   return (
-    <nav className={`bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 sticky top-0 z-50 transition-all duration-300 ${isMinimized ? 'py-2' : 'py-4'}`}>
+    <nav className={`bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800 sticky top-0 z-50 transition-all duration-300 ${isMinimized ? 'py-2' : 'py-4'}`}>
       <div className="container mx-auto px-4 flex items-center justify-between">
         <div className="flex items-center gap-8">
-          <Link href="/admin" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold">
-              A
-            </div>
-            {!isMinimized && <span className="font-bold text-white text-lg">Orbit Admin</span>}
+          <Link href="/admin" className="flex items-center gap-2 group">
+            <Logo showText={false} iconClassName="w-8 h-8 text-white group-hover:scale-105 transition-transform" />
+            {!isMinimized && <span className="font-bold text-white text-lg tracking-tight">Orbit <span className="text-zinc-500 font-medium">Admin</span></span>}
           </Link>
 
           {!isMinimized && (
             <div className="hidden md:flex items-center gap-1">
               <Link
                 href="/admin"
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/admin')
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-700'
-                }`}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${isActive('/admin')
+                  ? 'bg-white text-black'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                  }`}
               >
                 Dashboard
               </Link>
               <Link
                 href="/admin/properties"
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/admin/properties')
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-700'
-                }`}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${isActive('/admin/properties')
+                  ? 'bg-white text-black'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                  }`}
               >
                 Properties
               </Link>
               <Link
                 href="/admin/users"
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/admin/users')
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-700'
-                }`}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${isActive('/admin/users')
+                  ? 'bg-white text-black'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                  }`}
               >
                 Users
               </Link>
               <Link
                 href="/admin/bookings"
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/admin/bookings')
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-700'
-                }`}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${isActive('/admin/bookings')
+                  ? 'bg-white text-black'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                  }`}
               >
                 Bookings
               </Link>
               <Link
                 href="/admin/analytics"
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/admin/analytics')
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-700'
-                }`}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${isActive('/admin/analytics')
+                  ? 'bg-white text-black'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                  }`}
               >
                 Analytics
               </Link>
@@ -102,7 +96,7 @@ export function AdminNav() {
                 <button
                   onClick={() => setShowSettings(!showSettings)}
                   onMouseEnter={() => setShowSettings(true)}
-                  className="inline-flex items-center gap-2 px-3 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-md transition-colors"
+                  className="inline-flex items-center gap-2 px-3 py-2 text-zinc-400 hover:text-white hover:bg-zinc-900 rounded-full transition-colors text-sm font-medium"
                   title="Settings menu"
                 >
                   <Settings className="w-4 h-4" />
@@ -111,7 +105,7 @@ export function AdminNav() {
 
                 {showSettings && (
                   <div
-                    className="absolute right-0 mt-2 w-56 bg-slate-800 border border-slate-700 rounded-lg shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+                    className="absolute right-0 mt-2 w-56 bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200"
                     onMouseLeave={() => setShowSettings(false)}
                   >
                     {/* User Profile */}
@@ -120,7 +114,7 @@ export function AdminNav() {
                         router.push('/admin/profile');
                         setShowSettings(false);
                       }}
-                      className="w-full px-4 py-3 flex items-center gap-3 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors border-b border-slate-700 text-left"
+                      className="w-full px-4 py-3 flex items-center gap-3 text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors border-b border-zinc-900 text-left text-sm"
                     >
                       <User className="w-4 h-4" />
                       <span>User Profile</span>
@@ -132,7 +126,7 @@ export function AdminNav() {
                         router.push('/admin/blacklisted-users');
                         setShowSettings(false);
                       }}
-                      className="w-full px-4 py-3 flex items-center gap-3 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors border-b border-slate-700 text-left"
+                      className="w-full px-4 py-3 flex items-center gap-3 text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors border-b border-zinc-900 text-left text-sm"
                     >
                       <Shield className="w-4 h-4" />
                       <span>Blacklisted Users</span>
@@ -144,7 +138,7 @@ export function AdminNav() {
                         router.push('/admin/audit-logs');
                         setShowSettings(false);
                       }}
-                      className="w-full px-4 py-3 flex items-center gap-3 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors border-b border-slate-700 text-left"
+                      className="w-full px-4 py-3 flex items-center gap-3 text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors border-b border-zinc-900 text-left text-sm"
                     >
                       <Eye className="w-4 h-4" />
                       <span>Audit Logs</span>
@@ -156,7 +150,7 @@ export function AdminNav() {
                         router.push('/admin/system-settings');
                         setShowSettings(false);
                       }}
-                      className="w-full px-4 py-3 flex items-center gap-3 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors border-b border-slate-700 text-left"
+                      className="w-full px-4 py-3 flex items-center gap-3 text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors border-b border-zinc-900 text-left text-sm"
                     >
                       <Database className="w-4 h-4" />
                       <span>System Settings</span>
@@ -168,7 +162,7 @@ export function AdminNav() {
                         router.push('/admin/api-keys');
                         setShowSettings(false);
                       }}
-                      className="w-full px-4 py-3 flex items-center gap-3 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors text-left"
+                      className="w-full px-4 py-3 flex items-center gap-3 text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors text-left text-sm"
                     >
                       <Key className="w-4 h-4" />
                       <span>API Keys</span>
@@ -179,7 +173,7 @@ export function AdminNav() {
 
               <button
                 onClick={() => signOut({ callbackUrl: '/' })}
-                className="inline-flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-full transition-colors text-sm font-medium border border-red-500/20"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Logout</span>
@@ -188,7 +182,7 @@ export function AdminNav() {
           )}
           <button
             onClick={() => setIsMinimized(!isMinimized)}
-            className="inline-flex items-center gap-2 px-3 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-md transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-2 text-zinc-400 hover:text-white hover:bg-zinc-900 rounded-full transition-colors"
             title={isMinimized ? 'Expand' : 'Minimize'}
           >
             {isMinimized ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}

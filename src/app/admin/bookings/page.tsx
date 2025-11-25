@@ -48,15 +48,15 @@ export default function AdminBookingsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'paid':
-        return 'bg-green-600';
+        return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
       case 'pending':
-        return 'bg-yellow-600';
+        return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
       case 'confirmed':
-        return 'bg-blue-600';
+        return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
       case 'rejected':
-        return 'bg-red-600';
+        return 'bg-red-500/10 text-red-500 border-red-500/20';
       default:
-        return 'bg-slate-600';
+        return 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20';
     }
   };
 
@@ -68,83 +68,84 @@ export default function AdminBookingsPage() {
     { label: 'Total Bookings', value: bookings.length },
     { label: 'Paid Bookings', value: bookings.filter((b) => b.status === 'paid').length },
     { label: 'Total Revenue', value: `₹${totalRevenue.toLocaleString()}` },
-    { label: 'Average Booking', value: `₹${Math.round(totalRevenue / bookings.length).toLocaleString()}` },
+    { label: 'Average Booking', value: `₹${Math.round(totalRevenue / bookings.length || 0).toLocaleString()}` },
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Bookings Management</h1>
-        <p className="text-slate-400">View and manage all bookings</p>
+    <div className="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Bookings Management</h1>
+          <p className="text-zinc-400 mt-1">View and manage all bookings</p>
+        </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {stats.map((stat, i) => (
-          <Card key={i} className="bg-slate-900 border-slate-800">
-            <CardContent className="pt-6">
-              <p className="text-slate-400 text-sm mb-2">{stat.label}</p>
-              <p className="text-2xl font-bold text-white">{stat.value}</p>
-            </CardContent>
-          </Card>
+          <div key={i} className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-colors">
+            <p className="text-zinc-500 text-sm mb-2 font-medium uppercase tracking-wider">{stat.label}</p>
+            <p className="text-3xl font-bold text-white tracking-tight">{stat.value}</p>
+          </div>
         ))}
       </div>
 
       {/* Search */}
-      <Card className="bg-slate-900 border-slate-800">
-        <CardContent className="pt-6">
-          <Input
-            placeholder="Search by student name, email, or property..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="bg-slate-800 border-slate-700"
-          />
-        </CardContent>
-      </Card>
+      <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
+        <Input
+          placeholder="Search by student name, email, or property..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="bg-zinc-900 border-zinc-800 hover:border-zinc-700 focus:border-zinc-600 transition-colors text-white placeholder:text-zinc-600"
+        />
+      </div>
 
       {/* Bookings Table */}
-      <Card className="bg-slate-900 border-slate-800">
-        <CardHeader>
-          <CardTitle className="text-white">{filtered.length} Bookings</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden">
+        <div className="p-6 border-b border-zinc-800">
+          <h2 className="text-lg font-semibold text-white">{filtered.length} Bookings</h2>
+        </div>
+        <div>
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+              <Loader2 className="w-6 h-6 animate-spin text-zinc-500" />
             </div>
           ) : filtered.length === 0 ? (
-            <p className="text-slate-400 text-center py-8">No bookings found</p>
+            <div className="text-center py-12">
+              <p className="text-zinc-500">No bookings found</p>
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-slate-700">
-                    <th className="text-left py-4 px-4 text-slate-300 font-semibold">Student</th>
-                    <th className="text-left py-4 px-4 text-slate-300 font-semibold">Property</th>
-                    <th className="text-left py-4 px-4 text-slate-300 font-semibold">Amount</th>
-                    <th className="text-left py-4 px-4 text-slate-300 font-semibold">Status</th>
-                    <th className="text-left py-4 px-4 text-slate-300 font-semibold">Date</th>
+                  <tr className="border-b border-zinc-800 bg-zinc-900/50">
+                    <th className="text-left py-4 px-6 text-zinc-400 font-medium text-sm">Student</th>
+                    <th className="text-left py-4 px-6 text-zinc-400 font-medium text-sm">Property</th>
+                    <th className="text-left py-4 px-6 text-zinc-400 font-medium text-sm">Amount</th>
+                    <th className="text-left py-4 px-6 text-zinc-400 font-medium text-sm">Status</th>
+                    <th className="text-left py-4 px-6 text-zinc-400 font-medium text-sm">Date</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((booking) => (
-                    <tr key={booking._id} className="border-b border-slate-700/50 hover:bg-slate-800/30">
-                      <td className="py-4 px-4">
+                    <tr key={booking._id} className="border-b border-zinc-800 hover:bg-zinc-900/50 transition-colors">
+                      <td className="py-4 px-6">
                         <div>
-                          <p className="text-white font-semibold">{booking.studentId?.name || 'N/A'}</p>
-                          <p className="text-slate-400 text-sm">{booking.studentId?.email}</p>
+                          <p className="text-white font-medium">{booking.studentId?.name || 'N/A'}</p>
+                          <p className="text-zinc-500 text-sm">{booking.studentId?.email}</p>
                         </div>
                       </td>
-                      <td className="py-4 px-4 text-white">{booking.propertyId?.title || 'N/A'}</td>
-                      <td className="py-4 px-4 text-white font-semibold">
+                      <td className="py-4 px-6 text-zinc-300">{booking.propertyId?.title || 'N/A'}</td>
+                      <td className="py-4 px-6 text-white font-medium">
                         ₹{booking.amountPaid.toLocaleString()}
                       </td>
-                      <td className="py-4 px-4">
-                        <Badge className={getStatusColor(booking.status)}>
-                          {booking.status}
-                        </Badge>
+                      <td className="py-4 px-6">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(booking.status)}`}>
+                          {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                        </span>
                       </td>
-                      <td className="py-4 px-4 text-slate-400 text-sm">
+                      <td className="py-4 px-6 text-zinc-500 text-sm">
                         {new Date(booking.createdAt).toLocaleDateString()}
                       </td>
                     </tr>
@@ -153,8 +154,8 @@ export default function AdminBookingsPage() {
               </table>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

@@ -27,7 +27,7 @@ function ensureValidImages(property: any) {
     ];
 
     // Filter out invalid images first
-    let images = Array.isArray(property.media?.images) 
+    let images = Array.isArray(property.media?.images)
         ? property.media.images.filter((img: any) => img && typeof img === 'string' && img.startsWith('http'))
         : [];
 
@@ -111,7 +111,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
                     <div className="lg:col-span-2 space-y-12">
                         {/* Media Gallery */}
                         <ScrollReveal delay={0.2}>
-                            <PropertyImageGallery 
+                            <PropertyImageGallery
                                 key={property._id.toString()}
                                 images={property.media.images}
                                 virtualTourUrl={property.media.virtualTourUrl}
@@ -154,7 +154,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
                                         <CardContent className="p-6">
                                             <div className="flex items-center justify-between mb-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                                                    <div className="h-10 w-10 rounded-full bg-zinc-800 flex items-center justify-center text-white font-bold border border-zinc-700">
                                                         A
                                                     </div>
                                                     <div>
@@ -182,12 +182,12 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
                         <div className="sticky top-24 space-y-6">
                             <ScrollReveal delay={0.6}>
                                 {/* Verdict Box */}
-                                <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/30 rounded-2xl p-6 backdrop-blur-sm">
-                                    <div className="flex items-center gap-2 mb-3 text-blue-400 font-bold">
+                                <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 backdrop-blur-sm">
+                                    <div className="flex items-center gap-2 mb-3 text-white font-bold">
                                         <Shield className="h-5 w-5" />
                                         Circle13 Verdict
                                     </div>
-                                    <p className="text-zinc-300 text-sm italic leading-relaxed">
+                                    <p className="text-zinc-400 text-sm italic leading-relaxed">
                                         &quot;{property.verdict || 'Verified by our team. Safe and recommended.'}&quot;
                                     </p>
                                 </div>

@@ -28,7 +28,11 @@ async function seed() {
             console.log('Owner already exists.');
         }
 
-        // 2. Create Properties
+        // 2. Clear existing properties to ensure no duplicates
+        console.log('Clearing existing properties...');
+        await Property.deleteMany({});
+
+        // 3. Create Properties
         const properties = [
             {
                 ownerId: owner!._id,
@@ -108,15 +112,37 @@ async function seed() {
                 verdict: 'Best budget option in the area. Perfect for independent students and seniors who want freedom to manage their own lifestyle.',
                 sentimentTags: ['Budget Friendly', 'No Curfew', 'Independent Living'],
             },
+            {
+                ownerId: owner!._id,
+                title: 'Elite Student Living',
+                slug: 'elite-student-living',
+                description: 'Luxury student accommodation designed for those who want the best. Elite Student Living offers premium furnished rooms with air conditioning, attached bathrooms, and private balconies. The property features a rooftop cafeteria, gaming zone, and a fully equipped fitness center. We provide 4-times gourmet meals, high-speed fiber internet, and dedicated shuttle service to the university. Our focus is on providing a hotel-like experience with the community feel of a hostel. Perfect for international students and those who prioritize comfort and lifestyle.',
+                location: {
+                    lat: 12.648,
+                    lng: 77.440,
+                    address: 'Luxury Enclave, Harohalli, Karnataka 562112',
+                    directionsVideoUrl: 'https://youtube.com/shorts/dQw4w9WgXcQ',
+                },
+                price: { amount: 12000, period: 'monthly' },
+                amenities: ['AC Rooms', 'Attached Washroom', 'Shuttle Service', 'Gaming Zone', 'Rooftop Cafe', 'Fiber Internet', 'Housekeeping', 'Laundry'],
+                media: {
+                    images: [
+                        'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?q=80&w=2070&auto=format&fit=crop', // Luxury room
+                        'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=2080&auto=format&fit=crop', // Modern interior
+                        'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop', // Lounge
+                        'https://images.unsplash.com/photo-1584622050111-993a426fbf0a?q=80&w=2070&auto=format&fit=crop'  // Cafe area
+                    ],
+                    virtualTourUrl: 'https://kuula.co/share/collection/7lVLq',
+                },
+                liveStats: { totalRooms: 40, occupiedRooms: 38 },
+                verdict: 'The most premium option available. Ideal for students who want luxury and convenience without compromise.',
+                sentimentTags: ['Luxury', 'AC Rooms', 'Premium Food'],
+            },
         ];
 
         for (const prop of properties) {
-            console.log(`Upserting ${prop.title}...`);
-            await Property.updateOne(
-                { slug: prop.slug },
-                { $set: prop },
-                { upsert: true }
-            );
+            console.log(`Creating ${prop.title}...`);
+            await Property.create(prop);
         }
 
         console.log('Seeding complete.');

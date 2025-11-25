@@ -22,18 +22,34 @@ export function PropertyImageGallery({
     virtualTourUrl?: string, 
     videoUrl?: string 
 }) {
-    const [imageSources, setImageSources] = useState(images);
+    // Initialize with exactly 4 images, using placeholders for any missing ones
+    const [imageSources, setImageSources] = useState<string[]>(() => {
+        const initial = [...images];
+        // Pad with placeholders if we have fewer than 4 images
+        for (let i = initial.length; i < 4; i++) {
+            initial.push(PLACEHOLDERS[i % PLACEHOLDERS.length]);
+        }
+        return initial;
+    });
 
-    // Update state when props change (e.g. navigation)
+    // Update state when props change
     useEffect(() => {
-        setImageSources(images);
+        const initial = [...images];
+        for (let i = initial.length; i < 4; i++) {
+            initial.push(PLACEHOLDERS[i % PLACEHOLDERS.length]);
+        }
+        setImageSources(initial);
     }, [images]);
 
     const handleImageError = (index: number) => {
         console.log(`Image at index ${index} failed to load. Swapping with placeholder.`);
         setImageSources(prev => {
             const newSources = [...prev];
-            newSources[index] = PLACEHOLDERS[index % PLACEHOLDERS.length];
+            // If it's already a placeholder, maybe try another one or just keep it?
+            // For now, just ensure it is a placeholder.
+            if (!PLACEHOLDERS.includes(newSources[index])) {
+                 newSources[index] = PLACEHOLDERS[index % PLACEHOLDERS.length];
+            }
             return newSources;
         });
     };

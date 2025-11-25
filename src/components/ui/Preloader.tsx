@@ -49,53 +49,64 @@ export function Preloader() {
                         {/* Background Noise/Texture */}
                         <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-repeat" />
 
-                        {/* Center Content */}
-                        <div className="relative flex flex-col items-center gap-8 z-10">
+                        {/* Top Left Logo - Minimalist */}
+                        <div className="absolute top-8 left-8 z-20">
                             <motion.div
-                                initial={{ opacity: 0, scale: 0.8, filter: "blur(10px)" }}
-                                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                                transition={{ duration: 1, ease: "easeOut" }}
+                                initial={{ opacity: 0, y: -20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.8, delay: 0.2 }}
+                                className="flex items-center gap-2"
                             >
-                                <Logo className="text-white" iconClassName="w-24 h-24 md:w-32 md:h-32" showText={false} />
+                                <Logo className="text-white" iconClassName="w-6 h-6" showText={true} textClassName="text-sm tracking-widest font-normal" />
                             </motion.div>
-                            
-                            <div className="overflow-hidden h-[120px] md:h-[180px] flex items-center justify-center">
+                        </div>
+
+                        {/* Center Content - Absolute Center */}
+                        <div className="absolute inset-0 flex items-center justify-center z-10">
+                            <div className="relative overflow-hidden">
                                 <motion.h1 
-                                    className="text-9xl md:text-[12rem] font-bold tracking-tighter tabular-nums leading-none mix-blend-difference"
+                                    className="text-[15vw] md:text-[20vw] font-bold tracking-tighter tabular-nums leading-none text-white mix-blend-difference select-none"
                                     initial={{ y: 100, opacity: 0 }}
                                     animate={{ y: 0, opacity: 1 }}
-                                    transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+                                    transition={{ duration: 1, ease: "easeOut" }}
                                 >
-                                    {counter}%
+                                    {counter}
                                 </motion.h1>
+                                {/* Decorative line */}
+                                <motion.div 
+                                    className="absolute bottom-4 left-0 h-[2px] bg-white"
+                                    initial={{ width: "0%" }}
+                                    animate={{ width: "100%" }}
+                                    transition={{ duration: 1.5, ease: "easeInOut" }}
+                                />
                             </div>
                         </div>
 
-                        {/* Footer Info */}
-                        <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end text-xs md:text-sm text-zinc-500 font-mono uppercase tracking-widest z-10">
+                        {/* Footer Info - Minimalist Grid */}
+                        <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end text-[10px] md:text-xs text-zinc-500 font-mono uppercase tracking-[0.2em] z-10">
                             <div className="hidden md:block text-left">
-                                <span className="text-white font-bold">Orbit Student Living</span><br/>
-                                <span className="opacity-50">Experience Elevated</span>
+                                <span className="text-white">Bangalore, IN</span>
                             </div>
+                            
                             <div className="flex gap-4 items-center">
                                 <div className="flex gap-1.5">
                                     <motion.div 
-                                        className="w-1.5 h-1.5 bg-white rounded-full"
+                                        className="w-1 h-1 bg-white rounded-full"
                                         animate={{ opacity: [0.2, 1, 0.2] }}
                                         transition={{ duration: 1.5, repeat: Infinity }}
                                     />
                                     <motion.div 
-                                        className="w-1.5 h-1.5 bg-white rounded-full"
+                                        className="w-1 h-1 bg-white rounded-full"
                                         animate={{ opacity: [0.2, 1, 0.2] }}
                                         transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
                                     />
                                     <motion.div 
-                                        className="w-1.5 h-1.5 bg-white rounded-full"
+                                        className="w-1 h-1 bg-white rounded-full"
                                         animate={{ opacity: [0.2, 1, 0.2] }}
                                         transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }}
                                     />
                                 </div>
-                                <span className="text-white">Initializing System</span>
+                                <span className="text-white">Loading Assets</span>
                             </div>
                         </div>
                     </motion.div>

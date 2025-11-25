@@ -7,10 +7,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Logo } from '@/components/ui/Logo';
 
 export function Preloader() {
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [counter, setCounter] = useState(0);
 
     useEffect(() => {
+        // Check if we should show the preloader
+        const hasSeen = sessionStorage.getItem('hasSeenPreloader');
+        const isHome = window.location.pathname === '/';
+
+        if (hasSeen || !isHome) {
+            setIsLoading(false);
+            return;
+        }
+
+        setIsLoading(true);
+
         // Counter animation
         const interval = setInterval(() => {
             setCounter(prev => {
@@ -28,6 +39,7 @@ export function Preloader() {
             setIsLoading(false);
             document.body.style.cursor = 'default';
             window.scrollTo(0, 0);
+            sessionStorage.setItem('hasSeenPreloader', 'true');
         }, 2500);
 
         return () => {
@@ -64,7 +76,7 @@ export function Preloader() {
                         {/* Center Content - Absolute Center */}
                         <div className="absolute inset-0 flex items-center justify-center z-10">
                             <div className="relative overflow-hidden">
-                                <motion.h1 
+                                <motion.h1
                                     className="text-[15vw] md:text-[20vw] font-bold tracking-tighter tabular-nums leading-none text-white mix-blend-difference select-none"
                                     initial={{ y: 100, opacity: 0 }}
                                     animate={{ y: 0, opacity: 1 }}
@@ -73,7 +85,7 @@ export function Preloader() {
                                     {counter}
                                 </motion.h1>
                                 {/* Decorative line */}
-                                <motion.div 
+                                <motion.div
                                     className="absolute bottom-4 left-0 h-[2px] bg-white"
                                     initial={{ width: "0%" }}
                                     animate={{ width: "100%" }}
@@ -87,20 +99,20 @@ export function Preloader() {
                             <div className="hidden md:block text-left">
                                 <span className="text-white">Bangalore, IN</span>
                             </div>
-                            
+
                             <div className="flex gap-4 items-center">
                                 <div className="flex gap-1.5">
-                                    <motion.div 
+                                    <motion.div
                                         className="w-1 h-1 bg-white rounded-full"
                                         animate={{ opacity: [0.2, 1, 0.2] }}
                                         transition={{ duration: 1.5, repeat: Infinity }}
                                     />
-                                    <motion.div 
+                                    <motion.div
                                         className="w-1 h-1 bg-white rounded-full"
                                         animate={{ opacity: [0.2, 1, 0.2] }}
                                         transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
                                     />
-                                    <motion.div 
+                                    <motion.div
                                         className="w-1 h-1 bg-white rounded-full"
                                         animate={{ opacity: [0.2, 1, 0.2] }}
                                         transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }}

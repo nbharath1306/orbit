@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import { Logo } from '@/components/ui/Logo';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useSession } from 'next-auth/react';
 
 interface Message {
     id: string;
@@ -56,6 +57,7 @@ const ADMIN_QUICK_ACTIONS = [
 ];
 
 export function ChatWidget({ userRole = 'student' }: { userRole?: string }) {
+    const { data: session } = useSession();
     const [isOpen, setIsOpen] = useState(false);
     const [input, setInput] = useState('');
 
@@ -117,13 +119,17 @@ export function ChatWidget({ userRole = 'student' }: { userRole?: string }) {
     useEffect(() => {
         if (isOpen && messages.length === 0) {
             let welcomeContent = '';
+            const userName = session?.user?.name?.split(' ')[0] || '';
+            const hour = new Date().getHours();
+            const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+            const personalizedGreeting = userName ? `${greeting}, ${userName}.` : greeting + '.';
 
             if (userRole === 'admin') {
-                welcomeContent = 'Welcome back. I\'m ready to assist with administrative tasks.';
+                welcomeContent = `${personalizedGreeting} I'm ready to assist with administrative tasks.`;
             } else if (propertyContext) {
                 welcomeContent = `I see you're interested in ${propertyContext.title}. How can I help you with this property?`;
             } else {
-                welcomeContent = 'Welcome to Orbit. How can I help you find your ideal space today?';
+                welcomeContent = `${personalizedGreeting} Welcome to Orbit. How can I help you find your ideal space today?`;
             }
 
             const welcomeMessage: Message = {
@@ -133,7 +139,7 @@ export function ChatWidget({ userRole = 'student' }: { userRole?: string }) {
             };
             setMessages([welcomeMessage]);
         }
-    }, [isOpen, propertyContext, userRole]);
+    }, [isOpen, propertyContext, userRole, session]);
 
     const handleQuickAction = async (action: string) => {
         setInput('');
@@ -340,7 +346,7 @@ export function ChatWidget({ userRole = 'student' }: { userRole?: string }) {
                     </div>
                 </PopoverTrigger>
                 <PopoverContent
-                    className="w-[380px] p-0 bg-zinc-950 border border-zinc-800 shadow-2xl rounded-2xl overflow-hidden"
+                    className="w-[380px] p-0 bg-zinc-950 border border-zinc-800 shadow-2xl rounded-2xl overflow-hidden flex flex-col h-auto max-h-[600px] min-h-[200px]"
                     align="end"
                     sideOffset={16}
                 >
@@ -368,7 +374,7 @@ export function ChatWidget({ userRole = 'student' }: { userRole?: string }) {
                     </div>
 
                     {/* Messages Area */}
-                    <div className="h-[450px] overflow-y-auto p-4 space-y-6 scroll-smooth">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-6 scroll-smooth min-h-[150px] max-h-[400px]">
                         {messages.map((msg) => (
                             <motion.div
                                 key={msg.id}
@@ -457,7 +463,7 @@ export function ChatWidget({ userRole = 'student' }: { userRole?: string }) {
                     )}
 
                     {/* Input Area */}
-                    <div className="p-4 bg-zinc-950 border-t border-zinc-800">
+                    <div className="p-4 bg-zinc-950 border-t border-zinc-800 mt-auto">
                         <form onSubmit={handleFormSubmit} className="relative">
                             <Input
                                 value={input}

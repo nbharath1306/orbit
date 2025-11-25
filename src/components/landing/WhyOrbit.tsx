@@ -11,7 +11,7 @@ const CARDS = [
     title: "WE DON'T TRUST.",
     subtitle: "WE VERIFY.",
     description: "Every single property on Orbit is physically visited, inspected, and verified by our team. No catfishing. No surprises.",
-    image: "https://images.unsplash.com/photo-1522771753035-4a50356c6518?q=80&w=2670&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2670&auto=format&fit=crop",
     color: "bg-zinc-900",
     textColor: "text-white",
     icon: <Shield className="w-8 h-8" />,

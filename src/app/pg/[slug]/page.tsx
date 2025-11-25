@@ -10,6 +10,8 @@ import { BookingButton } from '@/components/BookingButton';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { Button } from '@/components/ui/button';
 
+import { PropertyImageGallery } from '@/components/PropertyImageGallery';
+
 // Force dynamic rendering and disable caching
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -109,83 +111,11 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
                     <div className="lg:col-span-2 space-y-12">
                         {/* Media Gallery */}
                         <ScrollReveal delay={0.2}>
-                            <Tabs defaultValue="photos" className="w-full">
-                                <div className="flex justify-between items-center mb-4">
-                                    <TabsList className="bg-zinc-900 border border-zinc-800">
-                                        <TabsTrigger value="photos">Photos</TabsTrigger>
-                                        <TabsTrigger value="360">360° Tour</TabsTrigger>
-                                        <TabsTrigger value="video">Video</TabsTrigger>
-                                    </TabsList>
-                                    <div className="flex gap-2">
-                                        <Button variant="outline" size="icon" className="rounded-full border-zinc-700 hover:bg-zinc-800">
-                                            <Share2 className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="outline" size="icon" className="rounded-full border-zinc-700 hover:bg-zinc-800">
-                                            <Heart className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                                <TabsContent value="photos" className="mt-0">
-                                    <div className="grid grid-cols-2 gap-2 rounded-2xl overflow-hidden aspect-video relative">
-                                        <div className="relative w-full h-full">
-                                            <Image
-                                                src={property.media.images[0]}
-                                                alt="Main view"
-                                                fill
-                                                className="object-cover"
-                                                sizes="(max-width: 768px) 100vw, 50vw"
-                                            />
-                                        </div>
-                                        <div className="grid grid-rows-2 gap-2 h-full">
-                                            <div className="relative w-full h-full">
-                                                <Image
-                                                    src={property.media.images[1]}
-                                                    alt="Secondary view 1"
-                                                    fill
-                                                    className="object-cover"
-                                                    sizes="(max-width: 768px) 50vw, 25vw"
-                                                />
-                                            </div>
-                                            <div className="relative w-full h-full">
-                                                <Image
-                                                    src={property.media.images[2]}
-                                                    alt="Secondary view 2"
-                                                    fill
-                                                    className="object-cover"
-                                                    sizes="(max-width: 768px) 50vw, 25vw"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </TabsContent>
-                                <TabsContent value="360" className="mt-0">
-                                    <div className="aspect-video rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                                        {property.media.virtualTourUrl ? (
-                                            <iframe
-                                                src={property.media.virtualTourUrl}
-                                                className="w-full h-full border-0"
-                                                allowFullScreen
-                                            />
-                                        ) : (
-                                            <div className="text-zinc-500">No 360° Tour available</div>
-                                        )}
-                                    </div>
-                                </TabsContent>
-                                <TabsContent value="video" className="mt-0">
-                                    <div className="aspect-video rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                                        {property.location.directionsVideoUrl ? (
-                                            <iframe
-                                                src={property.location.directionsVideoUrl.replace('youtube.com/shorts/', 'youtube.com/embed/')}
-                                                className="w-full h-full border-0"
-                                                allowFullScreen
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                            />
-                                        ) : (
-                                            <div className="text-zinc-500">No directions video available</div>
-                                        )}
-                                    </div>
-                                </TabsContent>
-                            </Tabs>
+                            <PropertyImageGallery 
+                                images={property.media.images}
+                                virtualTourUrl={property.media.virtualTourUrl}
+                                videoUrl={property.location.directionsVideoUrl}
+                            />
                         </ScrollReveal>
 
                         {/* About & Amenities */}

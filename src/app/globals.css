@@ -117,357 +117,66 @@
   --sidebar-ring: oklch(0.552 0.016 285.938);
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  body {
-    @apply bg-background text-foreground;
+@layer base {
+  :root {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
   }
 }
 
-@layer utilities {
-  @keyframes shimmer {
-    0% {
-      transform: translateX(-100%);
-    }
+body {
+  @apply bg-background text-foreground antialiased;
+  background-image: 
+    linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
 
-    100% {
-      transform: translateX(100%);
-    }
+/* Sophisticated Utilities */
+.text-balance {
+  text-wrap: balance;
+}
+
+.glass-panel {
+  @apply bg-zinc-900/50 backdrop-blur-xl border border-white/10;
+}
+
+.shimmer-overlay {
+  @apply absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/5 to-transparent;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
   }
-
-  .animate-shimmer {
-    animation: shimmer 2s infinite;
-  }
-
-  /* Property Card 3D Effects */
-  @keyframes cardHover3D {
-    0% {
-      transform: translateY(0px) rotateX(0deg);
-    }
-
-    50% {
-      transform: translateY(-4px) rotateX(2deg);
-    }
-
-    100% {
-      transform: translateY(0px) rotateX(0deg);
-    }
-  }
-
-  @keyframes cardGlow {
-
-    0%,
-    100% {
-      box-shadow: 0 0 8px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    }
-
-    50% {
-      box-shadow: 0 0 16px rgba(59, 130, 246, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    }
-  }
-
-  @keyframes slideInUp {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes fadeInScale {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  @keyframes priceFlip {
-
-    0%,
-    100% {
-      transform: rotateY(0deg);
-    }
-
-    50% {
-      transform: rotateY(180deg);
-    }
-  }
-
-  .animate-card-hover {
-    animation: cardHover3D 2s ease-in-out infinite;
-  }
-
-  .animate-card-glow {
-    animation: cardGlow 2s ease-in-out infinite;
-  }
-
-  .animate-slide-in {
-    animation: slideInUp 0.5s ease-out;
-  }
-
-  .animate-fade-scale {
-    animation: fadeInScale 0.4s ease-out;
-  }
-
-  .property-card {
-    background: linear-gradient(135deg, rgba(24, 24, 27, 0.95) 0%, rgba(39, 39, 42, 0.9) 100%);
-    border: 1px solid rgba(82, 82, 91, 0.5);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  .property-card:hover {
-    background: linear-gradient(135deg, rgba(39, 39, 42, 1) 0%, rgba(52, 52, 56, 1) 100%);
-    border-color: rgba(59, 130, 246, 0.8);
-    box-shadow:
-      0 16px 32px rgba(59, 130, 246, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1),
-      0 0 20px rgba(59, 130, 246, 0.15);
-    transform: perspective(1000px) translateY(-6px) rotateX(2deg) rotateZ(0.5deg);
-  }
-
-  .property-card-price {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-  }
-
-  .property-card-amenity {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%);
-    border: 1px solid rgba(59, 130, 246, 0.4);
-    box-shadow: inset 0 1px 2px rgba(59, 130, 246, 0.1);
-  }
-
-  .property-card-title {
-    background: linear-gradient(90deg, #ffffff 0%, #d4d4d8 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  /* CRAZY ANIMATIONS! */
-  @keyframes bounceInRotate {
-    0% {
-      opacity: 0;
-      transform: scale(0.3) rotate(-45deg);
-    }
-
-    50% {
-      opacity: 1;
-      transform: scale(1.05) rotate(5deg);
-    }
-
-    100% {
-      opacity: 1;
-      transform: scale(1) rotate(0deg);
-    }
-  }
-
-  @keyframes messagePop {
-    0% {
-      transform: scale(0.5) rotateY(180deg);
-      opacity: 0;
-    }
-
-    50% {
-      transform: scale(1.1);
-    }
-
-    100% {
-      transform: scale(1) rotateY(0deg);
-      opacity: 1;
-    }
-  }
-
-  @keyframes floatUp {
-    0% {
-      transform: translateY(20px) rotate(0deg);
-      opacity: 0;
-    }
-
-    50% {
-      transform: translateY(-5px) rotate(2deg);
-    }
-
-    100% {
-      transform: translateY(0px) rotate(0deg);
-      opacity: 1;
-    }
-  }
-
-  @keyframes pulseGlow {
-
-    0%,
-    100% {
-      box-shadow: 0 0 5px rgba(59, 130, 246, 0.3), 0 0 10px rgba(59, 130, 246, 0.1);
-    }
-
-    50% {
-      box-shadow: 0 0 20px rgba(59, 130, 246, 0.6), 0 0 30px rgba(59, 130, 246, 0.3);
-    }
-  }
-
-  @keyframes shimmerText {
-    0% {
-      background-position: -1000px 0;
-    }
-
-    100% {
-      background-position: 1000px 0;
-    }
-  }
-
-  @keyframes wiggle {
-
-    0%,
-    100% {
-      transform: rotate(0deg);
-    }
-
-    25% {
-      transform: rotate(-2deg);
-    }
-
-    75% {
-      transform: rotate(2deg);
-    }
-  }
-
-  @keyframes rainbowBorder {
-    0% {
-      border-color: #3b82f6;
-      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-    }
-
-    25% {
-      border-color: #8b5cf6;
-      box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
-    }
-
-    50% {
-      border-color: #ec4899;
-      box-shadow: 0 0 10px rgba(236, 72, 153, 0.5);
-    }
-
-    75% {
-      border-color: #f59e0b;
-      box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
-    }
-
-    100% {
-      border-color: #3b82f6;
-      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-    }
-  }
-
-  @keyframes heartbeat {
-
-    0%,
-    100% {
-      transform: scale(1);
-    }
-
-    25% {
-      transform: scale(1.1);
-    }
-
-    50% {
-      transform: scale(1.2);
-    }
-
-    75% {
-      transform: scale(1.1);
-    }
-  }
-
-  @keyframes swingIn {
-    0% {
-      transform: rotateZ(-45deg) translateX(-100px);
-      opacity: 0;
-    }
-
-    100% {
-      transform: rotateZ(0deg) translateX(0);
-      opacity: 1;
-    }
-  }
-
-  @keyframes glitch {
-
-    0%,
-    100% {
-      clip-path: inset(0 0 0 0);
-      transform: translate(0);
-    }
-
-    20% {
-      clip-path: inset(0 0 65% 0);
-      transform: translate(2px, 2px);
-    }
-
-    40% {
-      clip-path: inset(25% 0 58% 0);
-      transform: translate(-2px, -2px);
-    }
-
-    60% {
-      clip-path: inset(54% 0 7% 0);
-      transform: translate(2px, -2px);
-    }
-
-    80% {
-      clip-path: inset(63% 0 12% 0);
-      transform: translate(-2px, 2px);
-    }
-  }
-
-  /* Animation utility classes */
-  .animate-bounce-in-rotate {
-    animation: bounceInRotate 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  }
-
-  .animate-message-pop {
-    animation: messagePop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  }
-
-  .animate-float-up {
-    animation: floatUp 0.6s ease-out;
-  }
-
-  .animate-pulse-glow {
-    animation: pulseGlow 2s ease-in-out infinite;
-  }
-
-  .animate-wiggle {
-    animation: wiggle 0.5s ease-in-out;
-  }
-
-  .animate-rainbow-border {
-    animation: rainbowBorder 3s ease-in-out infinite;
-  }
-
-  .animate-heartbeat {
-    animation: heartbeat 0.8s ease-in-out;
-  }
-
-  .animate-swing-in {
-    animation: swingIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  }
-
-  .animate-glitch {
-    animation: glitch 0.4s infinite;
-  }
+}
+
+/* Hide scrollbar for clean UI */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

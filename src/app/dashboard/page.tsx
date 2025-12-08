@@ -1,130 +1,194 @@
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../api/auth/[...nextauth]/route';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
 import dbConnect from '@/lib/db';
+import User from '@/models/User';
 import Booking from '@/models/Booking';
-import Property from '@/models/Property';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { LiveStatsCounter } from '@/components/LiveStatsCounter';
+import UserLayoutContent from '@/components/user/layout/UserLayoutContent';
+import WelcomeCard from '@/components/user/dashboard/WelcomeCard';
+import UserStatsCard from '@/components/user/dashboard/UserStatsCard';
+import QuickActionButtons from '@/components/user/dashboard/QuickActionButtons';
+import RecentActivityFeed, { Activity } from '@/components/user/dashboard/RecentActivityFeed';
 
-export default async function DashboardPage() {
-    const session = await getServerSession(authOptions);
+export const dynamic = 'force-dynamic';
 
-    if (!session) {
-        redirect('/api/auth/signin');
-    }
-
+async function getUserStats(userId: string) {
+  try {
     await dbConnect();
 
-    const role = (session.user as Record<string, unknown>).role as string;
-    const userId = (session.user as Record<string, unknown>).id as string;
+    const activeBookings = await Booking.countDocuments({
+      studentId: userId,
+      $or: [{ status: 'confirmed' }, { status: 'paid' }],
+    }).catch(() => 0);
 
-    if (role === 'student') {
-        const bookings = await Booking.find({ studentId: userId })
-            .populate('propertyId')
-            .sort({ createdAt: -1 })
-            .lean();
+    const paidBookingsResult = await Booking.aggregate([
+      {
+        $match: {
+          studentId: userId,
+          status: 'paid',
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$amountPaid' },
+        },
+      },
+    ]).catch(() => []);
 
-        return (
-            <div className="container mx-auto px-4 py-8">
-                <h1 className="text-3xl font-bold mb-8">My Dashboard</h1>
+    const thisMonthBookingsResult = await Booking.aggregate([
+      {
+        $match: {
+          studentId: userId,
+          createdAt: {
+            $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$amountPaid' },
+        },
+      },
+    ]).catch(() => []);
 
-                <div className="space-y-6">
-                    <h2 className="text-xl font-semibold">My Bookings</h2>
-                    {bookings.length === 0 ? (
-                        <p className="text-zinc-500">No bookings yet.</p>
-                    ) : (
-                        <div className="grid gap-4">
-                            {bookings.map((booking: Record<string, unknown>) => {
-                                const bookingData = booking as Record<string, unknown>;
-                                return (
-                                    <Card key={booking._id as string} className="bg-zinc-900 border-zinc-800">
-                                        <CardHeader>
-                                            <div className="flex justify-between items-center">
-                                                <CardTitle>{(bookingData.propertyId as Record<string, unknown>)?.title as string}</CardTitle>
-                                                <Badge variant={(bookingData.status as string) === 'paid' ? 'default' : 'secondary'}>
-                                                    {(bookingData.status as string).toUpperCase()}
-                                                </Badge>
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="flex justify-between text-sm text-zinc-400">
-                                                <span>Amount Paid: ₹{bookingData.amountPaid as number}</span>
-                                                <span>Date: {new Date(bookingData.createdAt as string).toLocaleDateString()}</span>
-                                            </div>
-                                            <div className="mt-2 text-xs text-zinc-500">
-                                                Payment ID: {bookingData.paymentId as string}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                );
-                            })
-                            }
-                        </div >
-                    )}
-                </div >
-            </div >
-        );
+    return {
+      activeBookings: activeBookings || 0,
+      totalSpent: paidBookingsResult?.[0]?.total || 0,
+      monthlySpent: thisMonthBookingsResult?.[0]?.total || 0,
+      averageRating: 4.8,
+      unreadMessages: 0,
+      pendingReviews: 0,
+      savedProperties: 0,
+    };
+  } catch (error) {
+    console.error('Error fetching user stats:', error);
+    return {
+      activeBookings: 0,
+      totalSpent: 0,
+      monthlySpent: 0,
+      averageRating: 0,
+      unreadMessages: 0,
+      pendingReviews: 0,
+      savedProperties: 0,
+    };
+  }
+}
+
+async function getRecentActivity(userId: string): Promise<Activity[]> {
+  try {
+    await dbConnect();
+
+    const recentBookings = await Booking.find({ studentId: userId })
+      .sort({ updatedAt: -1 })
+      .limit(5)
+      .populate('propertyId', 'title')
+      .lean();
+
+    const activities: Activity[] = recentBookings.map((booking: any) => {
+      const statusMap: Record<string, Activity['type']> = {
+        confirmed: 'booking_confirmed',
+        rejected: 'booking_cancelled',
+        paid: 'payment_received',
+        pending: 'booking_confirmed',
+      };
+
+      return {
+        id: booking._id.toString(),
+        type: statusMap[booking.status] || 'booking_confirmed',
+        title:
+          statusMap[booking.status] === 'booking_confirmed'
+            ? 'Booking Confirmed'
+            : statusMap[booking.status] === 'booking_cancelled'
+              ? 'Booking Cancelled'
+              : 'Payment Received',
+        description: `${booking.propertyId?.title || 'Property'} - ₹${(booking.amountPaid / 100).toFixed(2)}`,
+        timestamp: (booking.updatedAt || booking.createdAt).toISOString(),
+        link: `/dashboard/bookings/${booking._id.toString()}`,
+      };
+    });
+
+    return activities;
+  } catch (error) {
+    console.error('Error fetching recent activity:', error);
+    return [];
+  }
+}
+
+export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
+
+  let user = null;
+  let stats = {
+    activeBookings: 0,
+    totalSpent: 0,
+    monthlySpent: 0,
+    averageRating: 4.8,
+    unreadMessages: 0,
+    pendingReviews: 0,
+    savedProperties: 0,
+  };
+  let activities: Activity[] = [];
+
+  try {
+    if (session?.user?.email) {
+      await dbConnect();
+      user = await User.findOne({ email: session.user.email }).lean();
+
+      if (user) {
+        const statsResult = await getUserStats(user._id.toString()).catch(() => ({
+          activeBookings: 0,
+          totalSpent: 0,
+          monthlySpent: 0,
+          averageRating: 4.8,
+          unreadMessages: 0,
+          pendingReviews: 0,
+          savedProperties: 0,
+        }));
+        stats = statsResult;
+
+        const activitiesResult = await getRecentActivity(user._id.toString()).catch(() => []);
+        activities = activitiesResult;
+      }
     }
+  } catch (error) {
+    console.error('Error in dashboard page:', error);
+  }
 
-    if (role === 'owner') {
-        const properties = await Property.find({ ownerId: userId }).lean();
-
-        return (
-            <div className="container mx-auto px-4 py-8">
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold">Owner Dashboard</h1>
-                    <Button>Add Property</Button>
-                </div>
-
-                <div className="space-y-6">
-                    <h2 className="text-xl font-semibold">My Listings & Live Stats</h2>
-                    <div className="grid gap-6">
-                        {properties.map((prop: Record<string, unknown>) => {
-                            const propData = prop as Record<string, unknown>;
-                            const location = propData.location as Record<string, unknown>;
-                            const liveStats = propData.liveStats as Record<string, unknown>;
-                            return (
-                                <Card key={prop._id as string} className="bg-zinc-900 border-zinc-800">
-                                    <CardHeader>
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <CardTitle>{propData.title as string}</CardTitle>
-                                                <p className="text-sm text-zinc-400">{location.address as string}</p>
-                                            </div>
-                                            <Badge variant="outline">{propData.slug as string}</Badge>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="flex items-center justify-between bg-zinc-800/50 p-4 rounded-lg">
-                                            <div>
-                                                <div className="text-sm text-zinc-400">Occupancy</div>
-                                                <div className="text-2xl font-bold">
-                                                    {liveStats.occupiedRooms as number} / {liveStats.totalRooms as number}
-                                                </div>
-                                            </div>
-                                            <LiveStatsCounter
-                                                propertyId={(prop._id as Record<string, unknown>).toString()}
-                                                initialCount={liveStats.occupiedRooms as number}
-                                                total={liveStats.totalRooms as number}
-                                            />
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            );
-                        })}
-                    </div>
-                </div >
-            </div >
-        );
-    }
-
+  if (!user) {
     return (
-        <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p>Welcome, Admin.</p>
+      <UserLayoutContent title="Dashboard">
+        <div className="relative rounded-3xl border border-red-500/20 bg-red-500/10 backdrop-blur-md p-6 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-transparent to-transparent opacity-50 pointer-events-none" />
+          <div className="relative z-10">
+            <h3 className="font-bold text-lg mb-2 text-red-400">Error Loading Dashboard</h3>
+            <p className="text-zinc-300">Please try refreshing the page or contact support if the issue persists.</p>
+          </div>
         </div>
+      </UserLayoutContent>
     );
+  }
+
+  return (
+    <UserLayoutContent 
+      title="Command Center"
+      subtitle="Welcome back! Here's your personalized dashboard"
+    >
+      <div className="space-y-6">
+        <WelcomeCard
+          userName={user.name || 'User'}
+          userAvatar={user.image}
+          lastLoginDate={new Date().toISOString()}
+          newNotifications={0}
+        />
+
+        <UserStatsCard stats={stats} />
+
+        <QuickActionButtons />
+
+        <RecentActivityFeed activities={activities} />
+      </div>
+    </UserLayoutContent>
+  );
 }

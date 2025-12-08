@@ -13,7 +13,8 @@ export function ClientLayoutContent({ children }: { children: React.ReactNode })
     const [NavbarComponent, setNavbarComponent] = useState<any>(null);
     const [ChatComponent, setChatComponent] = useState<any>(null);
     const pathname = usePathname();
-    const isDashboard = pathname?.startsWith('/admin') || pathname?.startsWith('/owner');
+    const isDashboard = pathname?.startsWith('/admin') || pathname?.startsWith('/owner') || pathname?.startsWith('/dashboard');
+    const isSearchPage = pathname?.startsWith('/search');
 
     useEffect(() => {
         const lenis = new Lenis({
@@ -57,12 +58,12 @@ export function ClientLayoutContent({ children }: { children: React.ReactNode })
             {mounted && <Preloader />}
             {mounted && <CustomCursor />}
             {mounted && <NoiseOverlay />}
-            {mounted && !isDashboard && (NavbarComponent ? <NavbarComponent /> : <div className="h-16 border-b border-zinc-800" />)}
+            {mounted && !isDashboard && !isSearchPage && (NavbarComponent ? <NavbarComponent /> : <div className="h-16 border-b border-zinc-800" />)}
             <main className="flex-1">
                 {children}
             </main>
-            {!isDashboard && <Footer />}
-            {mounted && !isDashboard && ChatComponent && <ChatComponent />}
+            {!isDashboard && !isSearchPage && <Footer />}
+            {mounted && !isDashboard && !isSearchPage && ChatComponent && <ChatComponent />}
         </>
     );
 }

@@ -41,6 +41,25 @@ export const authOptions: NextAuthOptions = {
                         role: 'owner',
                     };
                 }
+
+                // Allow any user in the database with 'password' as the password
+                if (credentials?.email && credentials?.password === 'password') {
+                    try {
+                        await dbConnect();
+                        const user = await User.findOne({ email: credentials.email }).lean();
+                        if (user) {
+                            return {
+                                id: user._id.toString(),
+                                name: user.name || 'User',
+                                email: user.email,
+                                role: user.role || 'user',
+                            };
+                        }
+                    } catch (error) {
+                        console.error('Error in credentials authorize:', error);
+                    }
+                }
+
                 return null;
             },
         }),

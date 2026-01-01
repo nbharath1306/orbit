@@ -200,11 +200,11 @@ export default async function AdminDashboard() {
         </div>
 
         {adminUser && (
-          <GlassCard className="flex items-center gap-4 p-2 pr-6 cursor-pointer group rounded-full border-white/10 hover:border-white/20">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[1px]">
-              <div className="w-full h-full rounded-full overflow-hidden bg-black">
+          <GlassCard className="flex items-center gap-5 p-2.5 pr-8 cursor-pointer group rounded-full border-white/10 hover:border-white/20 hover:bg-white/5 transition-all duration-300 transform hover:scale-[1.02]">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 p-[2px] shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-all duration-300">
+              <div className="w-full h-full rounded-full overflow-hidden bg-black ring-4 ring-black">
                 {adminUser.image ? (
-                  <img src={adminUser.image} alt={adminUser.name || 'Admin'} className="w-full h-full object-cover" />
+                  <img src={adminUser.image} alt={adminUser.name || 'Admin'} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-zinc-900">
                     <UserIcon className="w-6 h-6 text-zinc-400" />
@@ -212,9 +212,16 @@ export default async function AdminDashboard() {
                 )}
               </div>
             </div>
-            <div>
-              <p className="text-white font-bold leading-none group-hover:text-blue-400 transition-colors">{adminUser.name || 'Admin'}</p>
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mt-1.5">Administrator</p>
+            <div className="flex flex-col justify-center">
+              <p className="text-white text-lg font-bold leading-tight group-hover:text-blue-400 transition-colors tracking-tight mb-1">
+                {adminUser.name || 'Admin'}
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] group-hover:text-zinc-300 transition-colors">
+                  Administrator
+                </p>
+              </div>
             </div>
           </GlassCard>
         )}

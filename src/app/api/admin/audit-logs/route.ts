@@ -1,76 +1,85 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import connectDB from '@/lib/db';
-import mongoose from 'mongoose';
-
-// Get authOptions from NextAuth route
-async function getAuthOptions() {
-  try {
-    const { authOptions } = await import('../../auth/[...nextauth]/route');
-    return authOptions;
-  } catch {
-    return {};
-  }
-}
-
-// Define AuditLog schema
-const auditLogSchema = new mongoose.Schema({
-  admin: String,
-  action: String,
-  subject: String,
-  details: String,
-  changes: mongoose.Schema.Types.Mixed,
-  createdAt: { type: Date, default: Date.now },
-});
-
-const AuditLog = mongoose.models.AuditLog || mongoose.model('AuditLog', auditLogSchema);
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import dbConnect from '@/lib/db';
+import AuditLog from '@/models/AuditLog';
+import { createErrorResponse, addSecurityHeaders, validatePagination } from '@/lib/security';
 
 export async function GET(req: NextRequest) {
   try {
-    const authOptions = await getAuthOptions();
     const session = await getServerSession(authOptions);
-    if (!session?.user || (session.user as any).role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user?.email || session.user.role !== 'admin') {
+      return addSecurityHeaders(createErrorResponse('Unauthorized', 401));
     }
 
-    await connectDB();
+    await dbConnect();
 
-    const logs = await AuditLog.find()
-      .sort({ createdAt: -1 })
-      .limit(500);
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get('userId');
+    const resourceType = searchParams.get('resourceType');
+    const resourceId = searchParams.get('resourceId');
+    const action = searchParams.get('action');
+    const limitRaw = parseInt(searchParams.get('limit') || '20');
+    const skipRaw = parseInt(searchParams.get('skip') || '0');
 
-    return NextResponse.json({ logs });
+    const { limit, skip } = validatePagination(limitRaw, skipRaw);
+
+    // Build query
+    const query: Record<string, any> = {};
+
+    if (userId) query.userId = userId;
+    if (resourceType) query.resourceType = resourceType;
+    if (resourceId) query.resourceId = resourceId;
+    if (action) query.action = action;
+
+    // Execute queries
+    const [logs, total] = await Promise.all([
+      AuditLog.find(query)
+        .populate('userId', 'name email')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      AuditLog.countDocuments(query),
+    ]);
+
+    return addSecurityHeaders(
+      NextResponse.json({
+        logs,
+        total,
+        page: Math.floor(skip / limit) + 1,
+        pages: Math.ceil(total / limit),
+      })
+    );
   } catch (error) {
     console.error('Error fetching audit logs:', error);
-    return NextResponse.json({ error: 'Failed to fetch audit logs' }, { status: 500 });
+    return addSecurityHeaders(createErrorResponse('Failed to fetch audit logs', 500));
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const authOptions = await getAuthOptions();
     const session = await getServerSession(authOptions);
-    if (!session?.user || (session.user as any).role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user?.email || session.user.role !== 'admin') {
+      return addSecurityHeaders(createErrorResponse('Unauthorized', 401));
     }
 
-    await connectDB();
+    await dbConnect();
 
-    const { action, subject, details, changes } = await req.json();
+    const { userId, action, resourceType, resourceId, before, after, changes } = await req.json();
 
-    const log = new AuditLog({
-      admin: session.user.name || session.user.email,
+    const log = await AuditLog.create({
+      userId: session.user.id,
+      userRole: session.user.role,
+      userEmail: session.user.email,
       action,
-      subject,
-      details,
-      changes,
+      resourceType,
+      resourceId,
+      details: { before, after, changes },
     });
-
-    await log.save();
-
-    return NextResponse.json({ log });
+    return addSecurityHeaders(NextResponse.json(log, { status: 201 }));
   } catch (error) {
     console.error('Error creating audit log:', error);
-    return NextResponse.json({ error: 'Failed to create audit log' }, { status: 500 });
+    return addSecurityHeaders(createErrorResponse('Failed to create audit log', 500));
   }
 }

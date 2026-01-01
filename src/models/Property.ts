@@ -24,6 +24,14 @@ export interface IProperty extends Document {
         totalRooms: number;
         occupiedRooms: number;
     };
+    // Rating fields
+    averageRating?: number;
+    avgCleanliness?: number;
+    avgCommunication?: number;
+    avgAccuracy?: number;
+    avgLocation?: number;
+    avgValue?: number;
+    reviewCount?: number;
     verdict?: string;
     sentimentTags: string[];
 }
@@ -53,6 +61,14 @@ const PropertySchema: Schema<IProperty> = new Schema(
             totalRooms: { type: Number, required: true },
             occupiedRooms: { type: Number, default: 0 },
         },
+        // Rating fields
+        averageRating: { type: Number, default: 0, min: 0, max: 5 },
+        avgCleanliness: { type: Number, default: 0, min: 0, max: 5 },
+        avgCommunication: { type: Number, default: 0, min: 0, max: 5 },
+        avgAccuracy: { type: Number, default: 0, min: 0, max: 5 },
+        avgLocation: { type: Number, default: 0, min: 0, max: 5 },
+        avgValue: { type: Number, default: 0, min: 0, max: 5 },
+        reviewCount: { type: Number, default: 0 },
         verdict: { type: String },
         sentimentTags: [{ type: String }],
     },

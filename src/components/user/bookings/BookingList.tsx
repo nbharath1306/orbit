@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Calendar, MapPin, User, DollarSign, MessageSquare, Eye, Trash2 } from 'lucide-react';
+import { Calendar, MapPin, User, DollarSign, MessageSquare, Eye, Trash2, CreditCard } from 'lucide-react';
 import Link from 'next/link';
+import BookingDetailsModal from './BookingDetailsModal';
+import PaymentModal from './PaymentModal';
 
 export interface BookingItem {
   _id: string;
@@ -39,7 +41,10 @@ export default function BookingList({
   onBookingClick,
   onDelete,
 }: BookingListProps) {
-  const [selectedBooking, setSelectedBooking] = useState<string | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<BookingItem | null>(null);
+  const [paymentBooking, setPaymentBooking] = useState<BookingItem | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const filteredBookings = bookings.filter((booking) => {
     if (filter === 'all') return true;
@@ -48,6 +53,91 @@ export default function BookingList({
     if (filter === 'cancelled') return booking.status === 'rejected';
     return true;
   });
+
+  const handleDetailsClick = (booking: BookingItem) => {
+    setSelectedBooking(booking);
+    onBookingClick?.(booking._id);
+  };
+
+  const handleCancelBooking = async (bookingId: string) => {
+    const booking = bookings.find(b => b._id === bookingId);
+    
+    if (!booking) {
+      setToastMessage({
+        text: 'Booking not found',
+        type: 'error',
+      });
+      return;
+    }
+
+    // Check if already cancelled
+    if (booking.status === 'rejected') {
+      setToastMessage({
+        text: 'This booking has already been cancelled',
+        type: 'error',
+      });
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+
+    // Check if confirmed (can't cancel confirmed)
+    if (booking.status === 'confirmed') {
+      setToastMessage({
+        text: 'Cannot cancel confirmed bookings. Please contact the owner.',
+        type: 'error',
+      });
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+
+    const confirmMessage = booking.status === 'paid' 
+      ? 'Are you sure? Payment has been made. Cancelling will process a refund.\n\nThis action cannot be undone.'
+      : 'Are you sure you want to cancel this booking?\n\nThis action cannot be undone.';
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/bookings/cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bookingId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to cancel booking');
+      }
+
+      setToastMessage({
+        text: 'Booking cancelled successfully',
+        type: 'success',
+      });
+
+      onDelete?.(bookingId);
+
+      // Auto-hide toast
+      setTimeout(() => setToastMessage(null), 3000);
+
+      // Reload page to reflect changes
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (error: any) {
+      console.error('Cancel error:', error);
+      setToastMessage({
+        text: error.message || 'Failed to cancel booking',
+        type: 'error',
+      });
+
+      setTimeout(() => setToastMessage(null), 4000);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -67,7 +157,7 @@ export default function BookingList({
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'pending':
-        return '⏳ Pending';
+        return '⏳ Waiting for Approval';
       case 'paid':
         return '💰 Paid';
       case 'confirmed':
@@ -159,6 +249,17 @@ export default function BookingList({
                   </div>
                 </div>
 
+                {/* Approval Pending Message */}
+                {booking.status === 'pending' && (
+                  <div className="mb-4 p-3 rounded-lg bg-yellow-500/5 border border-yellow-500/20 flex items-start gap-2">
+                    <span className="text-yellow-400 font-semibold text-lg">⏳</span>
+                    <div>
+                      <p className="text-sm font-semibold text-yellow-100">Waiting for Owner Approval</p>
+                      <p className="text-xs text-yellow-200/70 mt-1">The owner will review your request within 24 hours. You'll be able to make the payment once approved.</p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Info Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                   <div>
@@ -193,8 +294,9 @@ export default function BookingList({
               {/* Actions */}
               <div className="flex flex-wrap gap-3">
                 <button
-                  onClick={() => onBookingClick?.(booking._id)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/30 rounded-lg transition-all font-medium text-sm"
+                  onClick={() => handleDetailsClick(booking)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/30 rounded-lg transition-all font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isLoading}
                 >
                   <Eye size={16} />
                   Details
@@ -206,13 +308,24 @@ export default function BookingList({
                   <MessageSquare size={16} />
                   Message Owner
                 </Link>
-                {booking.status === 'pending' && (
+                {booking.status === 'confirmed' && (
                   <button
-                    onClick={() => onDelete?.(booking._id)}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-all font-medium text-sm"
+                    onClick={() => setPaymentBooking(booking)}
+                    disabled={isLoading}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20 hover:border-green-500/30 rounded-lg transition-all font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <CreditCard size={16} />
+                    Pay Now
+                  </button>
+                )}
+                {['pending', 'paid'].includes(booking.status) && (
+                  <button
+                    onClick={() => handleCancelBooking(booking._id)}
+                    disabled={isLoading}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-all font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Trash2 size={16} />
-                    Cancel
+                    {isLoading ? 'Cancelling...' : 'Cancel'}
                   </button>
                 )}
               </div>
@@ -220,6 +333,42 @@ export default function BookingList({
           </div>
         </div>
       ))}
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div
+          className={`fixed bottom-4 right-4 z-50 max-w-sm px-6 py-4 rounded-2xl font-medium text-white backdrop-blur-md border transition-all shadow-2xl ${
+            toastMessage.type === 'success'
+              ? 'bg-green-500/20 border-green-500/30 text-green-100'
+              : 'bg-red-500/20 border-red-500/30 text-red-100'
+          }`}
+        >
+          <p className="text-sm">{toastMessage.text}</p>
+        </div>
+      )}
+
+      {/* Details Modal */}
+      <BookingDetailsModal
+        booking={selectedBooking}
+        onClose={() => setSelectedBooking(null)}
+      />
+
+      {/* Payment Modal */}
+      {paymentBooking && (
+        <PaymentModal
+          bookingId={paymentBooking._id}
+          amount={Math.ceil((paymentBooking.amountPaid || 0) / 100)}
+          propertyTitle={paymentBooking.propertyId.title}
+          onClose={() => setPaymentBooking(null)}
+          onSuccess={() => {
+            setToastMessage({
+              text: 'Payment successful! Reloading...',
+              type: 'success',
+            });
+            setTimeout(() => window.location.reload(), 1500);
+          }}
+        />
+      )}
     </div>
   );
 }

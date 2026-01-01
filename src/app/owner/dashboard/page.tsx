@@ -3,89 +3,122 @@
 import { Building2, Users, DollarSign, Star, TrendingUp, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2, XCircle, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import NotificationCenter from '@/components/owner/NotificationCenter';
+
+interface Property {
+  _id: string;
+  title: string;
+  liveStats?: { occupiedRooms?: number; totalRooms?: number };
+  price?: { amount: number };
+}
+
+interface Booking {
+  _id: string;
+  studentId?: { name?: string; email?: string };
+  propertyId?: { title?: string };
+  status?: string;
+  createdAt?: string;
+}
 
 export default function OwnerDashboard() {
   const searchParams = useSearchParams();
   const ownerId = searchParams.get('ownerId');
   const isViewingAsAdmin = !!ownerId;
 
-  // Mock Data
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  async function fetchData() {
+    try {
+      setLoading(true);
+      const [propsRes, bookingsRes] = await Promise.all([
+        fetch('/api/owner/properties'),
+        fetch('/api/owner/bookings'),
+      ]);
+
+      if (propsRes.ok) {
+        const propsData = await propsRes.json();
+        setProperties(propsData.properties || []);
+      }
+
+      if (bookingsRes.ok) {
+        const bookingsData = await bookingsRes.json();
+        setBookings(bookingsData.bookings || []);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Calculate stats from real data
+  const totalProperties = properties.length;
+  const totalOccupied = properties.reduce((sum, p) => sum + (p.liveStats?.occupiedRooms || 0), 0);
+  const totalRooms = properties.reduce((sum, p) => sum + (p.liveStats?.totalRooms || 0), 0);
+  const occupancyRate = totalRooms > 0 ? Math.round((totalOccupied / totalRooms) * 100) : 0;
+  const monthlyRevenue = properties.reduce((sum, p) => sum + (p.price?.amount || 0), 0);
+
   const stats = [
     {
       label: 'Total Properties',
-      value: '3',
-      change: '+1 this month',
-      trend: 'up',
+      value: totalProperties.toString(),
+      change: '+0 this month',
+      trend: 'up' as const,
       icon: Building2,
       color: 'text-blue-400',
       bg: 'bg-blue-500/10',
     },
     {
       label: 'Occupancy Rate',
-      value: '85%',
-      change: '+5% vs last month',
-      trend: 'up',
+      value: `${occupancyRate}%`,
+      change: '+0% vs last month',
+      trend: 'up' as const,
       icon: Users,
       color: 'text-emerald-400',
       bg: 'bg-emerald-500/10',
     },
     {
       label: 'Monthly Revenue',
-      value: '₹45,000',
-      change: '+12% vs last month',
-      trend: 'up',
+      value: `₹${(monthlyRevenue / 1000).toFixed(0)}k`,
+      change: '+0% vs last month',
+      trend: 'up' as const,
       icon: DollarSign,
       color: 'text-amber-400',
       bg: 'bg-amber-500/10',
     },
     {
-      label: 'Average Rating',
-      value: '4.8',
-      change: '0.2 vs last month',
-      trend: 'up',
+      label: 'Pending Bookings',
+      value: bookings.filter(b => b.status === 'pending').length.toString(),
+      change: bookings.length > 0 ? `${bookings.length} total` : 'None',
+      trend: 'up' as const,
       icon: Star,
       color: 'text-purple-400',
       bg: 'bg-purple-500/10',
     },
   ];
 
-  const recentActivity = [
-    {
-      id: 1,
-      type: 'booking',
-      title: 'New Booking Request',
-      description: 'Rahul Kumar requested Room 101 at Sunny Villa',
-      time: '2 hours ago',
-      status: 'pending',
-    },
-    {
-      id: 2,
-      type: 'review',
-      title: 'New Review Received',
-      description: 'Priya Sharma gave 5 stars to Green Heights',
-      time: '5 hours ago',
-      status: 'completed',
-    },
-    {
-      id: 3,
-      type: 'payment',
-      title: 'Payment Processed',
-      description: 'Monthly rent received from Amit Singh',
-      time: '1 day ago',
-      status: 'completed',
-    },
-    {
-      id: 4,
-      type: 'booking',
-      title: 'Booking Cancelled',
-      description: 'Sneha Gupta cancelled booking for Room 202',
-      time: '2 days ago',
-      status: 'cancelled',
-    },
-  ];
+  // Format recent activity from bookings
+  const recentActivity = bookings.slice(0, 4).map((booking, idx) => ({
+    id: idx + 1,
+    type: 'booking',
+    title: booking.status === 'pending' ? 'New Booking Request' : `Booking ${booking.status}`,
+    description: `${booking.studentId?.name || 'Student'} for ${booking.propertyId?.title || 'Property'}`,
+    time: new Date(booking.createdAt || '').toLocaleDateString(),
+    status: booking.status as 'pending' | 'completed' | 'cancelled',
+  }));
 
   return (
     <div className="space-y-8">
+      {/* Notification Center */}
+      <NotificationCenter />
+
       {/* Admin View Banner */}
       {isViewingAsAdmin && (
         <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-center gap-3 text-blue-400 animate-in fade-in slide-in-from-top-2">
@@ -146,25 +179,26 @@ export default function OwnerDashboard() {
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-white">Recent Activity</h2>
-            <Link href="/owner/notifications" className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors">
+            <Link href="/owner/bookings" className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors">
               View All
             </Link>
           </div>
           
           <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden">
-            <div className="divide-y divide-white/5">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="p-4 hover:bg-white/5 transition-colors flex items-start gap-4">
-                  <div className={`mt-1 p-2 rounded-full ${
-                    activity.type === 'booking' ? 'bg-blue-500/10 text-blue-400' :
-                    activity.type === 'review' ? 'bg-purple-500/10 text-purple-400' :
-                    'bg-emerald-500/10 text-emerald-400'
-                  }`}>
-                    {activity.type === 'booking' ? <Clock className="w-4 h-4" /> :
-                     activity.type === 'review' ? <Star className="w-4 h-4" /> :
-                     <DollarSign className="w-4 h-4" />}
-                  </div>
-                  <div className="flex-1">
+            {recentActivity.length > 0 ? (
+              <div className="divide-y divide-white/5">
+                {recentActivity.map((activity) => (
+                  <div key={activity.id} className="p-4 hover:bg-white/5 transition-colors flex items-start gap-4">
+                    <div className={`mt-1 p-2 rounded-full ${
+                      activity.type === 'booking' ? 'bg-blue-500/10 text-blue-400' :
+                      activity.type === 'review' ? 'bg-purple-500/10 text-purple-400' :
+                      'bg-emerald-500/10 text-emerald-400'
+                    }`}>
+                      {activity.type === 'booking' ? <Clock className="w-4 h-4" /> :
+                       activity.type === 'review' ? <Star className="w-4 h-4" /> :
+                       <DollarSign className="w-4 h-4" />}
+                    </div>
+                    <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
                       <h4 className="text-white font-medium">{activity.title}</h4>
                       <span className="text-xs text-zinc-500">{activity.time}</span>
@@ -190,7 +224,14 @@ export default function OwnerDashboard() {
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+            ) : (
+              <div className="p-8 text-center">
+                <Clock className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
+                <p className="text-zinc-400 text-sm">No recent activity yet</p>
+                <p className="text-zinc-500 text-xs mt-1">Your booking requests will appear here</p>
+              </div>
+            )}
           </div>
         </div>
 

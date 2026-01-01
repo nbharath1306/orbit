@@ -2,6 +2,7 @@ import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { OwnerNav } from '@/components/owner/OwnerNav';
+import { SessionProvider } from '@/components/providers/SessionProvider';
 
 export default async function OwnerLayout({
   children,
@@ -22,7 +23,8 @@ export default async function OwnerLayout({
   }
 
   return (
-    <div className="min-h-screen bg-black text-zinc-100 selection:bg-emerald-500 selection:text-black font-sans antialiased">
+    <SessionProvider session={session}>
+      <div className="min-h-screen bg-black text-zinc-100 selection:bg-emerald-500 selection:text-black font-sans antialiased">
       {/* Background Effects */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         {/* Base Gradient */}
@@ -49,5 +51,6 @@ export default async function OwnerLayout({
         </main>
       </div>
     </div>
+    </SessionProvider>
   );
 }

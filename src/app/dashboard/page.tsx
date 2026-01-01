@@ -99,11 +99,11 @@ async function getRecentActivity(userId: string): Promise<Activity[]> {
         type: statusMap[booking.status] || 'booking_confirmed',
         title:
           statusMap[booking.status] === 'booking_confirmed'
-            ? 'Booking Confirmed'
+            ? 'Reservation Confirmed'
             : statusMap[booking.status] === 'booking_cancelled'
-              ? 'Booking Cancelled'
+              ? 'Reservation Cancelled'
               : 'Payment Received',
-        description: `${booking.propertyId?.title || 'Property'} - ₹${(booking.amountPaid / 100).toFixed(2)}`,
+        description: `${booking.propertyId?.title || 'Property'} - ₹${booking.amountPaid ? (booking.amountPaid / 100).toFixed(2) : '0.00'}`,
         timestamp: (booking.updatedAt || booking.createdAt).toISOString(),
         link: `/dashboard/bookings/${booking._id.toString()}`,
       };

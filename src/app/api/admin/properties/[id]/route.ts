@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import dbConnect from '@/lib/db';
 import Property from '@/models/Property';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import mongoose from 'mongoose';
 
 export async function PATCH(
   request: NextRequest,
@@ -39,7 +40,39 @@ export async function PATCH(
       );
     }
 
-    return NextResponse.json({ property });
+    // If property is approved, create owner promotion request
+    if (approvalStatus === 'approved') {
+      const User = mongoose.model('User');
+      const OwnerPromotionRequest = mongoose.model('OwnerPromotionRequest');
+
+      const owner = await User.findById(property.ownerId);
+
+      if (owner && owner.role !== 'owner') {
+        // Check if already has pending request
+        const existingRequest = await OwnerPromotionRequest.findOne({
+          userId: owner._id,
+          status: 'pending',
+        });
+
+        // Create promotion request if not exists
+        if (!existingRequest) {
+          const promotionRequest = new OwnerPromotionRequest({
+            userId: owner._id,
+            userEmail: owner.email,
+            userName: owner.name,
+            propertyId: property._id,
+            propertyTitle: property.title,
+            status: 'pending',
+          });
+          await promotionRequest.save();
+        }
+      }
+    }
+
+    return NextResponse.json({ 
+      success: true,
+      property 
+    });
   } catch (error) {
     console.error('Error in PATCH /api/admin/properties/[id]:', error);
     return NextResponse.json(

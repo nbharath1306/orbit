@@ -5,7 +5,8 @@ import dbConnect from '@/lib/db';
 import User from '@/models/User';
 import Booking from '@/models/Booking';
 import UserLayoutContent from '@/components/user/layout/UserLayoutContent';
-import BookingList, { BookingItem } from '@/components/user/bookings/BookingList';
+import BookingsPageContent from '@/components/user/bookings/BookingsPageContent';
+import { BookingItem } from '@/components/user/bookings/BookingList';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -16,14 +17,36 @@ async function getUserBookings(userId: string) {
     await dbConnect();
 
     const bookings = await Booking.find({ studentId: userId })
-      .populate('propertyId', 'title slug location images')
-      .populate('ownerId', 'name image')
+      .populate('propertyId', 'title slug location')
+      .populate('ownerId', 'name')
       .sort({ createdAt: -1 })
       .lean();
 
+    // Convert MongoDB objects to plain objects
     return bookings.map((booking: any) => ({
-      ...booking,
-      _id: booking._id.toString(),
+      _id: booking._id?.toString() || '',
+      studentId: booking.studentId?.toString ? booking.studentId.toString() : booking.studentId,
+      propertyId: {
+        _id: booking.propertyId?._id?.toString() || '',
+        title: booking.propertyId?.title || 'Unknown Property',
+        slug: booking.propertyId?.slug || '',
+        location: {
+          address: booking.propertyId?.location?.address || '',
+        },
+      },
+      ownerId: {
+        _id: booking.ownerId?._id?.toString() || '',
+        name: booking.ownerId?.name || 'Unknown Owner',
+      },
+      status: booking.status || 'pending',
+      paymentStatus: booking.paymentStatus || 'pending',
+      checkInDate: booking.checkInDate?.toISOString() || new Date().toISOString(),
+      durationMonths: booking.durationMonths || 1,
+      monthlyRent: booking.monthlyRent || 0,
+      totalAmount: booking.totalAmount || 0,
+      amountPaid: booking.amountPaid || 0,
+      createdAt: booking.createdAt?.toISOString() || new Date().toISOString(),
+      ownerResponse: booking.ownerResponse || null,
     })) as BookingItem[];
   } catch (error) {
     console.error('Error fetching bookings:', error);
@@ -50,10 +73,6 @@ export default async function BookingsPage() {
 
     const bookings = await getUserBookings(user._id.toString());
 
-    const activeCount = bookings.filter((b) =>
-      ['pending', 'confirmed', 'paid'].includes(b.status)
-    ).length;
-
     return (
       <UserLayoutContent
         title="My Bookings"
@@ -67,38 +86,7 @@ export default async function BookingsPage() {
           </Link>
         }
       >
-        {/* Filter Tabs */}
-        <div className="flex gap-2 sm:gap-4 mb-6 border-b border-white/10 overflow-x-auto">
-          <Link 
-            href="/dashboard/bookings" 
-            className="px-3 sm:px-4 py-2 border-b-2 border-blue-500 text-blue-400 font-semibold text-sm whitespace-nowrap"
-          >
-            All ({bookings.length})
-          </Link>
-          <button className="px-3 sm:px-4 py-2 text-zinc-400 font-semibold text-sm whitespace-nowrap hover:text-blue-400 transition-colors">
-            Active ({activeCount})
-          </button>
-          <button className="px-3 sm:px-4 py-2 text-zinc-400 font-semibold text-sm whitespace-nowrap hover:text-blue-400 transition-colors">
-            Completed ({bookings.filter((b) => b.status === 'confirmed').length})
-          </button>
-        </div>
-
-        {/* Bookings List */}
-        {bookings.length > 0 ? (
-          <BookingList bookings={bookings} filter="all" />
-        ) : (
-          <div className="relative rounded-3xl border border-white/5 bg-zinc-900/40 backdrop-blur-md p-12 text-center overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent opacity-50 pointer-events-none" />
-            <div className="relative z-10">
-              <p className="text-zinc-400 text-lg mb-4">No bookings yet</p>
-              <Link href="/search">
-                <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white">
-                  Browse Properties
-                </Button>
-              </Link>
-            </div>
-          </div>
-        )}
+        <BookingsPageContent initialBookings={bookings} />
       </UserLayoutContent>
     );
   } catch (error) {

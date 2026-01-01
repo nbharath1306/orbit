@@ -18,10 +18,30 @@ export default function UserTopNav({ unreadCount = 0, userName = 'User', userAva
   const router = useRouter();
   const [showSettings, setShowSettings] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [liveUnreadCount, setLiveUnreadCount] = useState(unreadCount);
   const settingsRef = useRef<HTMLDivElement>(null);
   const mobileRef = useRef<HTMLDivElement>(null);
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/');
+
+  // Fetch unread count periodically
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await fetch('/api/messages/unread-count');
+        if (res.ok) {
+          const data = await res.json();
+          setLiveUnreadCount(data.unreadCount || 0);
+        }
+      } catch (err) {
+        console.error('Failed to fetch unread count:', err);
+      }
+    };
+
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 5000); // Check every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -46,7 +66,7 @@ export default function UserTopNav({ unreadCount = 0, userName = 'User', userAva
     { name: 'Dashboard', path: '/dashboard', icon: null },
     { name: 'Bookings', path: '/dashboard/bookings', icon: Calendar },
     { name: 'Saved', path: '/dashboard/saved', icon: Heart },
-    { name: 'Messages', path: '/dashboard/messages', icon: MessageSquare, badge: unreadCount },
+    { name: 'Messages', path: '/dashboard/messages', icon: MessageSquare, badge: liveUnreadCount },
   ];
 
   return (

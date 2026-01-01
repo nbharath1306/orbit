@@ -1,8 +1,17 @@
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import Auth0Provider from 'next-auth/providers/auth0';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import bcrypt from 'bcryptjs';
 import dbConnect from '@/lib/db';
 import User from '@/models/User';
+
+// Owner emails list - users signing up with these emails get owner role
+const OWNER_EMAILS = [
+  'sai-owner@orbit.com',
+  'dsu-owner@orbit.com',
+  'green-owner@orbit.com',
+  'owner@orbit.com',
+];
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -42,18 +51,26 @@ export const authOptions: NextAuthOptions = {
                     };
                 }
 
-                // Allow any user in the database with 'password' as the password
-                if (credentials?.email && credentials?.password === 'password') {
+                // Allow any user in the database with correct password
+                if (credentials?.email && credentials?.password) {
                     try {
                         await dbConnect();
                         const user = await User.findOne({ email: credentials.email }).lean();
                         if (user) {
+                          // Verify password
+                          const isPasswordValid = await bcrypt.compare(credentials.password, user.password || '');
+                          if (isPasswordValid) {
+                            // Check if this email should be owner
+                            const isOwnerEmail = OWNER_EMAILS.includes(user.email.toLowerCase());
+                            const userRole = isOwnerEmail ? 'owner' : user.role || 'user';
+                            
                             return {
-                                id: user._id.toString(),
-                                name: user.name || 'User',
-                                email: user.email,
-                                role: user.role || 'user',
-                            };
+                                  id: user._id.toString(),
+                                  name: user.name || 'User',
+                                  email: user.email,
+                                  role: userRole,
+                              };
+                          }
                         }
                     } catch (error) {
                         console.error('Error in credentials authorize:', error);
@@ -69,14 +86,25 @@ export const authOptions: NextAuthOptions = {
             if (account?.provider === 'auth0') {
                 await dbConnect();
                 const existingUser = await User.findOne({ email: user.email });
+                
+                // Determine role based on email
+                const isOwnerEmail = OWNER_EMAILS.includes(user.email?.toLowerCase() || '');
+                const userRole = isOwnerEmail ? 'owner' : 'user';
+                
                 if (!existingUser) {
                     await User.create({
                         name: user.name,
                         email: user.email,
                         image: user.image,
-                        role: 'user', // Default role
+                        role: userRole,
                         isVerified: false,
                     });
+                } else if (isOwnerEmail && existingUser.role !== 'owner') {
+                  // If owner email and not already owner, update role
+                  await User.updateOne(
+                    { email: user.email },
+                    { role: 'owner' }
+                  );
                 }
             }
             return true;

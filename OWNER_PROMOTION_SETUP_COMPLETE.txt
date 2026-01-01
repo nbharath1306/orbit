@@ -1,0 +1,133 @@
+console.log(`
+╔════════════════════════════════════════════════════════════════╗
+║                   OWNER PROMOTION SYSTEM                       ║
+║                      ✅ SETUP COMPLETE                          ║
+╚════════════════════════════════════════════════════════════════╝
+
+📋 WHAT'S NEW:
+==============
+
+1️⃣ AUTO OWNER ROLE ASSIGNMENT
+   ✅ When users sign up with these emails, they're INSTANTLY promoted to OWNER:
+      • sai-owner@orbit.com
+      • dsu-owner@orbit.com
+      • green-owner@orbit.com
+      • owner@orbit.com
+
+2️⃣ PROPERTY APPROVAL → OWNER PROMOTION FLOW
+   ✅ When admin approves a property, system automatically:
+      1. Creates an owner promotion request
+      2. Stores it in OwnerPromotionRequest collection
+      3. Waits for admin to review/approve
+
+3️⃣ ADMIN PROMOTION MANAGEMENT
+   ✅ New admin page: /admin/owner-requests
+   ✅ Admins can:
+      • View all pending owner promotion requests
+      • Filter by status (pending/all)
+      • Approve user → promotes to owner role
+      • Reject user → stores rejection reason
+
+4️⃣ API ENDPOINTS CREATED
+   ✅ POST   /api/admin/promote-owner/[userId]         → Approve promotion
+   ✅ POST   /api/admin/reject-owner-promotion/[userId] → Reject with reason
+   ✅ GET    /api/admin/owner-requests                  → List all requests
+   ✅ POST   /api/owner/request-promotion               → User requests owner
+   ✅ GET    /api/owner/request-promotion               → Check promotion status
+
+═══════════════════════════════════════════════════════════════════
+
+🧪 TESTING WORKFLOW:
+====================
+
+SCENARIO 1: Email-Based Owner Assignment
+─────────────────────────────────────────
+1. Go to: http://localhost:3000/auth/signin
+2. Sign in with: sai-owner@orbit.com (password: Sai@12345)
+3. Result: ✅ LOGGED IN AS OWNER (not student)
+4. Can access: /owner/dashboard
+
+SCENARIO 2: Property Approval → Owner Promotion
+─────────────────────────────────────────────────
+1. Sign in as Admin: admin@orbit.com (password: Admin@12345)
+2. Go to: /admin/properties
+3. Find a property with status "pending"
+4. Click "Approve" button
+5. System automatically creates promotion request
+6. Admin goes to: /admin/owner-requests
+7. Sees pending request from property owner
+8. Click "Approve & Promote"
+9. Result: ✅ User promoted to OWNER role
+
+SCENARIO 3: Manual Owner Promotion Request
+────────────────────────────────────────────
+1. Sign in as regular USER
+2. List a property (goes to pending)
+3. Call: POST /api/owner/request-promotion
+   Body: { propertyId: "xyz", propertyTitle: "My PG" }
+4. Admin goes to: /admin/owner-requests
+5. Approves request
+6. Result: ✅ User promoted to OWNER
+
+═══════════════════════════════════════════════════════════════════
+
+📊 DATABASE SCHEMA:
+===================
+
+NEW MODEL: OwnerPromotionRequest
+┌─ userId            → Reference to User
+├─ userEmail         → User's email
+├─ userName          → User's name
+├─ propertyId        → Reference to Property
+├─ propertyTitle     → Property name
+├─ status            → 'pending' | 'approved' | 'rejected'
+├─ reason            → Rejection reason (if rejected)
+├─ requestedAt       → When request was created
+├─ reviewedAt        → When admin reviewed
+├─ reviewedBy        → Admin who reviewed
+└─ createdAt/updatedAt → Timestamps
+
+═══════════════════════════════════════════════════════════════════
+
+🔑 KEY FEATURES:
+================
+
+✅ Automatic role assignment based on email
+✅ Property approval triggers promotion request
+✅ Admin review & approval/rejection with reasons
+✅ Users can track their promotion status
+✅ Prevent duplicate requests
+✅ Full audit trail (who approved, when, why)
+✅ Responsive UI with status badges
+✅ Error handling & validation
+
+═══════════════════════════════════════════════════════════════════
+
+🚀 NEXT STEPS:
+==============
+
+1. Test sign-in with owner emails
+2. Test property approval flow
+3. Check /admin/owner-requests page
+4. Verify user roles update to 'owner'
+5. Test rejection flow with reasons
+
+═══════════════════════════════════════════════════════════════════
+
+📝 FILES CREATED/MODIFIED:
+===========================
+
+NEW FILES:
+✅ src/models/OwnerPromotionRequest.ts
+✅ src/app/api/admin/promote-owner/[userId]/route.ts
+✅ src/app/api/admin/reject-owner-promotion/[userId]/route.ts
+✅ src/app/api/admin/owner-requests/route.ts
+✅ src/app/api/owner/request-promotion/route.ts
+✅ src/app/admin/owner-requests/page.tsx
+
+MODIFIED FILES:
+✅ src/app/api/auth/[...nextauth]/route.ts  (added email-based role assignment)
+✅ src/app/api/admin/properties/[id]/route.ts (added auto promotion request on approval)
+
+═══════════════════════════════════════════════════════════════════
+`);

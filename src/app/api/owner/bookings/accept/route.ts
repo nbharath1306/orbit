@@ -3,6 +3,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import dbConnect from '@/lib/db';
 import Booking from '@/models/Booking';
 import AuditLog from '@/models/AuditLog';
+import Message from '@/models/Message';
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import { 
@@ -125,6 +126,25 @@ export async function POST(req: NextRequest) {
       userAgent: metadata.userAgent,
       timestamp: new Date(),
     });
+
+    // Send notification message to student
+    try {
+      const studentId = typeof booking.studentId === 'object' && booking.studentId !== null 
+        ? (booking.studentId as any)._id 
+        : booking.studentId;
+      
+      await Message.create({
+        threadId: validBookingId.toString(),
+        studentId: new mongoose.Types.ObjectId(studentId),
+        ownerId: new mongoose.Types.ObjectId(session.user.id),
+        senderRole: 'owner',
+        message: `✅ Great news! Your booking request for ${property.title} has been accepted! You can now proceed with the payment to confirm your reservation.`,
+        read: false,
+        delivered: false,
+      });
+    } catch (msgError) {
+      logger.warn('Failed to send notification message', { bookingId: validBookingId, error: msgError });
+    }
     
     logger.logSecurity('BOOKING_ACCEPTED', {
       email: session.user.email,

@@ -66,7 +66,7 @@ export default function ReviewCard({ review, showProperty = false, onUpdate }: R
 
       if (response.ok) {
         setMarked(true);
-        toast.success('Marked as helpful ✓');
+        toast.success('👍 Marked as helpful! Thank you for the feedback.', { duration: 2000 });
         if (onUpdate) onUpdate();
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -92,7 +92,7 @@ export default function ReviewCard({ review, showProperty = false, onUpdate }: R
 
       if (response.ok) {
         setReported(true);
-        toast.success('Review reported successfully ✓');
+        toast.success('✅ Thank you! Review reported successfully. Our team will review it shortly.', { duration: 4000 });
       } else {
         const errorData = await response.json().catch(() => ({}));
         const errorMsg = errorData.message || errorData.error || 'Failed to report review';

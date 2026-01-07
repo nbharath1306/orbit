@@ -95,13 +95,36 @@ export default function OwnerBookingsPage() {
 
       const data = await res.json();
       if (res.ok) {
-        showToast('Booking accepted! Student can now proceed with payment', 'success');
+        const booking = bookings.find(b => b._id === bookingId);
+        const studentName = booking?.studentId?.name || 'Student';
+        showToast(
+          `✅ Booking accepted! ${studentName} has been notified and can now proceed with payment.`,
+          'success'
+        );
+        
+        // Update the booking status in local state immediately
+        setBookings(prevBookings => 
+          prevBookings.map(b => 
+            b._id === bookingId 
+              ? { ...b, status: 'confirmed' as const }
+              : b
+          )
+        );
+        
+        // Update stats
+        setStats(prev => ({
+          ...prev,
+          pending: Math.max(0, prev.pending - 1),
+          confirmed: prev.confirmed + 1
+        }));
+        
+        // Refresh data from server
         await fetchData();
       } else {
-        showToast(data.error || 'Failed to accept booking', 'error');
+        showToast(data.error || '⚠️ Failed to accept booking. Please try again.', 'error');
       }
     } catch (error) {
-      showToast('Error accepting booking', 'error');
+      showToast('⚠️ Network error. Please check your connection and try again.', 'error');
     } finally {
       setProcessingId(null);
     }
@@ -121,19 +144,42 @@ export default function OwnerBookingsPage() {
 
       const data = await res.json();
       if (res.ok) {
-        showToast('Booking rejected', 'success');
+        const booking = bookings.find(b => b._id === bookingId);
+        const studentName = booking?.studentId?.name || 'Student';
+        showToast(
+          `❌ Booking rejected. ${studentName} has been notified.`,
+          'success'
+        );
+        
+        // Update the booking status in local state immediately
+        setBookings(prevBookings => 
+          prevBookings.map(b => 
+            b._id === bookingId 
+              ? { ...b, status: 'rejected' as const }
+              : b
+          )
+        );
+        
+        // Update stats
+        setStats(prev => ({
+          ...prev,
+          pending: Math.max(0, prev.pending - 1)
+        }));
+        
         setShowRejectModal(null);
         setRejectionReason(prev => {
           const updated = { ...prev };
           delete updated[bookingId];
           return updated;
         });
+        
+        // Refresh data from server
         await fetchData();
       } else {
-        showToast(data.error || 'Failed to reject booking', 'error');
+        showToast(data.error || '⚠️ Failed to reject booking. Please try again.', 'error');
       }
     } catch (error) {
-      showToast('Error rejecting booking', 'error');
+      showToast('⚠️ Network error. Please check your connection and try again.', 'error');
     } finally {
       setProcessingId(null);
     }

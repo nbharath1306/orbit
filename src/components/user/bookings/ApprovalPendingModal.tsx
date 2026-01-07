@@ -96,7 +96,17 @@ export default function ApprovalPendingModal({
               </div>
               <div>
                 <p className="text-white text-sm font-medium">Make Payment</p>
-                <p className="text-xs text-zinc-500">Available after approval</p>
+                <p className="text-xs text-zinc-500">Complete payment after approval</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center">
+                <span className="text-purple-400 text-sm font-bold">4</span>
+              </div>
+              <div>
+                <p className="text-white text-sm font-medium">Booking Confirmed</p>
+                <p className="text-xs text-zinc-500">Move in on your check-in date</p>
               </div>
             </div>
           </div>

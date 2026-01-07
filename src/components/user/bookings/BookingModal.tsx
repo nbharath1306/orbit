@@ -126,13 +126,16 @@ export default function BookingModal({ property, trigger }: BookingModalProps) {
     e.preventDefault();
     
     if (!formData.checkInDate) {
-      toast.error('Please select check-in date');
+      toast.error('📅 Please select a check-in date to continue', { duration: 3000 });
       return;
     }
 
     const checkInDate = new Date(formData.checkInDate);
-    if (checkInDate < new Date()) {
-      toast.error('Check-in date must be in the future');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (checkInDate < today) {
+      toast.error('⏰ Check-in date must be today or in the future', { duration: 3000 });
       return;
     }
 
@@ -151,7 +154,21 @@ export default function BookingModal({ property, trigger }: BookingModalProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create booking');
+        // Handle specific error cases with better messages
+        if (data.error?.includes('already have an active booking')) {
+          toast.error(
+            `You already have an active booking for ${property.title}. Please cancel or complete your existing booking first.`,
+            { duration: 5000 }
+          );
+        } else if (data.error?.includes('fully booked')) {
+          toast.error(
+            `Sorry, ${property.title} is fully booked for the selected dates. Try different dates or check other properties.`,
+            { duration: 5000 }
+          );
+        } else {
+          toast.error(data.error || 'Failed to create booking. Please try again.', { duration: 4000 });
+        }
+        return;
       }
 
       // Calculate and show approval message
@@ -160,10 +177,25 @@ export default function BookingModal({ property, trigger }: BookingModalProps) {
       const securityDeposit = monthlyRent;
       const totalAmount = totalRent + securityDeposit;
       
+      // Show success toast
+      toast.success(
+        `🎉 Booking request submitted for ${property.title}! The owner will review your request shortly.`,
+        { duration: 5000 }
+      );
+      
       setReservationAmount(totalAmount);
       setShowApprovalMessage(true);
       setOpen(false);
       setStep(1);
+      
+      // Reset form
+      setFormData({
+        checkInDate: '',
+        durationMonths: 3,
+        guestCount: 1,
+        roomType: 'single',
+        specialRequests: '',
+      });
       
       // Redirect to booking details after modal closes
       setTimeout(() => {
@@ -171,7 +203,13 @@ export default function BookingModal({ property, trigger }: BookingModalProps) {
       }, 2000);
     } catch (error) {
       console.error('Booking error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to create booking');
+      // Don't show error toast here if we already handled it above
+      if (error instanceof Error && !error.message.includes('already have an active booking')) {
+        toast.error(
+          error.message || 'Unable to create booking. Please check your connection and try again.',
+          { duration: 4000 }
+        );
+      }
     } finally {
       setLoading(false);
     }

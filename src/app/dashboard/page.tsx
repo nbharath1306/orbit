@@ -1,8 +1,10 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
+import mongoose from 'mongoose';
 import dbConnect from '@/lib/db';
 import User from '@/models/User';
+import Property from '@/models/Property';
 import Booking from '@/models/Booking';
 import UserLayoutContent from '@/components/user/layout/UserLayoutContent';
 import WelcomeCard from '@/components/user/dashboard/WelcomeCard';
@@ -15,16 +17,20 @@ export const dynamic = 'force-dynamic';
 async function getUserStats(userId: string) {
   try {
     await dbConnect();
+    
+    // Ensure models are registered
+    Property;
+    Booking;
 
     const activeBookings = await Booking.countDocuments({
-      studentId: userId,
+      studentId: new mongoose.Types.ObjectId(userId),
       $or: [{ status: 'confirmed' }, { status: 'paid' }],
     }).catch(() => 0);
 
     const paidBookingsResult = await Booking.aggregate([
       {
         $match: {
-          studentId: userId,
+          studentId: new mongoose.Types.ObjectId(userId),
           status: 'paid',
         },
       },
@@ -39,7 +45,7 @@ async function getUserStats(userId: string) {
     const thisMonthBookingsResult = await Booking.aggregate([
       {
         $match: {
-          studentId: userId,
+          studentId: new mongoose.Types.ObjectId(userId),
           createdAt: {
             $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
           },
@@ -79,8 +85,12 @@ async function getUserStats(userId: string) {
 async function getRecentActivity(userId: string): Promise<Activity[]> {
   try {
     await dbConnect();
+    
+    // Ensure models are registered
+    Property;
+    Booking;
 
-    const recentBookings = await Booking.find({ studentId: userId })
+    const recentBookings = await Booking.find({ studentId: new mongoose.Types.ObjectId(userId) })
       .sort({ updatedAt: -1 })
       .limit(5)
       .populate('propertyId', 'title')

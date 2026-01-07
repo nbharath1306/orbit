@@ -96,17 +96,17 @@ export default function ReviewModal({ propertyId, bookingId, onSuccess, trigger 
       location: formData.location,
       value: formData.value,
     }).some(r => r === 0)) {
-      toast.error('Please rate all categories');
+      toast.error('⭐ Please rate all categories to continue', { duration: 3000 });
       return;
     }
 
-    if (formData.comment.length < 50) {
-      toast.error('Comment must be at least 50 characters');
+    if (comment.length < 50) {
+      toast.error('✏️ Comment must be at least 50 characters (currently ${comment.length}/50)', { duration: 3000 });
       return;
     }
 
     if (formData.comment.length > 2000) {
-      toast.error('Comment must not exceed 2000 characters');
+      toast.error(`✏️ Comment too long. Maximum 2000 characters (currently ${formData.comment.length}/2000)`, { duration: 3000 });
       return;
     }
 
@@ -131,7 +131,7 @@ export default function ReviewModal({ propertyId, bookingId, onSuccess, trigger 
         throw new Error(data.error || 'Failed to submit review');
       }
 
-      toast.success('Review submitted successfully!');
+      toast.success('✅ Thank you! Your review has been submitted successfully and will help other students.', { duration: 4000 });
       setOpen(false);
       
       if (onSuccess) {

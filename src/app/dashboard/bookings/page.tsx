@@ -1,8 +1,10 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
+import mongoose from 'mongoose';
 import dbConnect from '@/lib/db';
 import User from '@/models/User';
+import Property from '@/models/Property';
 import Booking from '@/models/Booking';
 import UserLayoutContent from '@/components/user/layout/UserLayoutContent';
 import BookingsPageContent from '@/components/user/bookings/BookingsPageContent';
@@ -15,8 +17,12 @@ export const dynamic = 'force-dynamic';
 async function getUserBookings(userId: string) {
   try {
     await dbConnect();
+    
+    // Ensure models are registered
+    Property; // Force model registration
+    Booking; // Force model registration
 
-    const bookings = await Booking.find({ studentId: userId })
+    const bookings = await Booking.find({ studentId: new mongoose.Types.ObjectId(userId) })
       .populate('propertyId', 'title slug location')
       .populate('ownerId', 'name')
       .sort({ createdAt: -1 })

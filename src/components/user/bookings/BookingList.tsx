@@ -64,35 +64,41 @@ export default function BookingList({
     
     if (!booking) {
       setToastMessage({
-        text: 'Booking not found',
+        text: '⚠️ Booking not found. Please refresh the page.',
         type: 'error',
       });
+      setTimeout(() => setToastMessage(null), 3000);
       return;
     }
 
     // Check if already cancelled
     if (booking.status === 'rejected') {
+      const propertyName = booking.propertyId?.title || 'this property';
       setToastMessage({
-        text: 'This booking has already been cancelled',
+        text: `Your booking for ${propertyName} has already been cancelled.`,
         type: 'error',
       });
-      setTimeout(() => setToastMessage(null), 3000);
+      setTimeout(() => setToastMessage(null), 4000);
       return;
     }
 
     // Check if confirmed (can't cancel confirmed)
     if (booking.status === 'confirmed') {
+      const propertyName = booking.propertyId?.title || 'this property';
+      const ownerName = booking.ownerId?.name || 'the owner';
       setToastMessage({
-        text: 'Cannot cancel confirmed bookings. Please contact the owner.',
+        text: `⛔ Cannot cancel confirmed booking for ${propertyName}. Please contact ${ownerName} directly.`,
         type: 'error',
       });
-      setTimeout(() => setToastMessage(null), 3000);
+      setTimeout(() => setToastMessage(null), 5000);
       return;
     }
 
+    const propertyName = booking.propertyId?.title || 'this property';
+    
     const confirmMessage = booking.status === 'paid' 
-      ? 'Are you sure? Payment has been made. Cancelling will process a refund.\n\nThis action cannot be undone.'
-      : 'Are you sure you want to cancel this booking?\n\nThis action cannot be undone.';
+      ? `Are you sure you want to cancel your booking for ${propertyName}?\n\nPayment has been made. Cancelling will process a refund.\nThis action cannot be undone.`
+      : `Are you sure you want to cancel your booking for ${propertyName}?\n\nThis action cannot be undone.`;
 
     if (!confirm(confirmMessage)) {
       return;
@@ -114,26 +120,32 @@ export default function BookingList({
         throw new Error(data.error || 'Failed to cancel booking');
       }
 
+      const refundMessage = booking.status === 'paid' ? ' Refund will be processed in 5-7 business days.' : '';
+      
       setToastMessage({
-        text: 'Booking cancelled successfully',
+        text: `✅ Booking for ${propertyName} cancelled successfully.${refundMessage}`,
         type: 'success',
       });
 
       onDelete?.(bookingId);
 
       // Auto-hide toast
-      setTimeout(() => setToastMessage(null), 3000);
+      setTimeout(() => setToastMessage(null), 5000);
 
       // Reload page to reflect changes
       setTimeout(() => window.location.reload(), 1500);
     } catch (error: any) {
       console.error('Cancel error:', error);
+      const errorMessage = error.message?.includes('Network') 
+        ? '⚠️ Network error. Please check your connection and try again.'
+        : error.message || '⚠️ Failed to cancel booking. Please try again or contact support.';
+      
       setToastMessage({
-        text: error.message || 'Failed to cancel booking',
+        text: errorMessage,
         type: 'error',
       });
 
-      setTimeout(() => setToastMessage(null), 4000);
+      setTimeout(() => setToastMessage(null), 5000);
     } finally {
       setIsLoading(false);
     }

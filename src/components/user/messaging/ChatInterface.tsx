@@ -76,7 +76,7 @@ export default function ChatInterface({
       const data = await res.json();
       if (!data.user) {
         setAuthError(true);
-        toast.error('Please log in to message');
+        toast.error('🔒 Please sign in to send messages to property owners', { duration: 4000 });
       } else {
         setAuthError(false);
       }
@@ -109,15 +109,15 @@ export default function ChatInterface({
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) {
-      toast.error('Message cannot be empty');
+      toast.error('✏️ Please type a message before sending', { duration: 2000 });
       return;
     }
     if (!threadId) {
-      toast.error('Chat not ready');
+      toast.error('⚠️ Chat not ready. Please refresh the page and try again.', { duration: 3000 });
       return;
     }
     if (authError) {
-      toast.error('Please log in');
+      toast.error('🔒 Please sign in to send messages', { duration: 3000 });
       return;
     }
 
@@ -148,7 +148,7 @@ export default function ChatInterface({
       const data = await res.json();
       setMessages([...messages, data.message]);
       setNewMessage('');
-      toast.success('Sent!');
+      toast.success('✅ Message sent!', { duration: 2000 });
 
       window.dispatchEvent(new CustomEvent('newMessage', {
         detail: { ownerId, property: propertyTitle, threadId },

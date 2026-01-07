@@ -4,43 +4,100 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import dbConnect from '@/lib/db';
 import Review from '@/models/Review';
 import User from '@/models/User';
-import { rateLimit, getClientIp, createErrorResponse, addSecurityHeaders, sanitizeInput } from '@/lib/security';
 import mongoose from 'mongoose';
+import {
+  rateLimit,
+  getRateLimitIdentifier,
+  addSecurityHeaders,
+  addRateLimitHeaders,
+  createErrorResponse,
+  validateObjectId,
+  sanitizeString,
+  getRequestMetadata,
+  sanitizeErrorForLog,
+} from '@/lib/security-enhanced';
+import { logger } from '@/lib/logger';
 
-// GET single review
+/**
+ * GET /api/reviews/[id]
+ * Get a single review by ID (public)
+ * Security: Rate limited, ID validation
+ */
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params;
+  const startTime = Date.now();
+  const metadata = getRequestMetadata(req);
+
   try {
-    const clientIp = getClientIp(req);
-    const rateLimitResult = rateLimit(`review-get-${clientIp}`, 60, 60000);
+    // Rate limiting for public endpoint (50 req/15min)
+    const identifier = getRateLimitIdentifier(req);
+    const rateLimitResult = rateLimit(identifier, 50, 15 * 60 * 1000);
 
     if (!rateLimitResult.success) {
-      return addSecurityHeaders(createErrorResponse('Too many requests', 429));
+      logger.warn('Rate limit exceeded for review details', { ip: metadata.ip });
+      return createRateLimitResponse(rateLimitResult.retryAfter!);
     }
+
+    const { id } = await context.params;
+
+    // Validate review ID
+    const validReviewId = validateObjectId(id);
+    if (!validReviewId) {
+      logger.warn('Invalid review ID', { reviewId: id, ip: metadata.ip });
+      return createErrorResponse('Invalid review ID format', 400);
+    }
+
+    logger.info('Review details request received', {
+      reviewId: validReviewId,
+      ip: metadata.ip,
+    });
 
     await dbConnect();
 
-    const reviewId = id;
-    if (!mongoose.Types.ObjectId.isValid(reviewId)) {
-      return addSecurityHeaders(createErrorResponse('Invalid review ID', 400));
-    }
-
-    const review = await Review.findById(reviewId)
+    const review = await Review.findById(validReviewId)
       .populate('studentId', 'name image')
       .populate('propertyId', 'title slug location')
       .lean();
 
     if (!review) {
-      return addSecurityHeaders(createErrorResponse('Review not found', 404));
+      logger.warn('Review not found', { reviewId: validReviewId });
+      return createErrorResponse('Review not found', 404);
     }
 
-    return addSecurityHeaders(NextResponse.json({ review }));
-  } catch (error) {
-    console.error('Error fetching review:', error);
-    return addSecurityHeaders(createErrorResponse('Failed to fetch review', 500));
+    // Log performance
+    const duration = Date.now() - startTime;
+    if (duration > 1000) {
+      logger.warn('Slow review details query', {
+        route: 'GET /api/reviews/[id]',
+        duration,
+      });
+    }
+
+    const response = NextResponse.json(
+      {
+        success: true,
+        review,
+        timestamp: new Date().toISOString(),
+      },
+      { status: 200 }
+    );
+
+    addSecurityHeaders(response);
+    addRateLimitHeaders(response, 50, rateLimitResult.remaining, rateLimitResult.resetTime);
+
+    return response;
+  } catch (error: any) {
+    logger.error('Review details query failed', sanitizeErrorForLog(error), {
+      metadata,
+    });
+
+    if (error.name === 'CastError') {
+      return createErrorResponse('Invalid ID format', 400);
+    }
+
+    return createErrorResponse('Failed to fetch review. Please try again.', 500);
   }
 }
 

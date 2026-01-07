@@ -3,73 +3,238 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import dbConnect from '@/lib/db';
 import Booking from '@/models/Booking';
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  rateLimit,
+  getRateLimitIdentifier,
+  addSecurityHeaders,
+  addRateLimitHeaders,
+  createErrorResponse,
+  validateObjectId,
+  validateInteger,
+  getRequestMetadata,
+  sanitizeErrorForLog,
+} from '@/lib/security-enhanced';
+import { logger } from '@/lib/logger';
+import crypto from 'crypto';
 
-// Note: Razorpay integration is handled through frontend SDK
-// This endpoint creates an order ID for tracking purposes
-
+/**
+ * POST /api/bookings/create-order
+ * Creates a Razorpay order for payment processing
+ * Security: Rate limited, authenticated, ownership verified
+ */
 export async function POST(req: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
+  const startTime = Date.now();
+  const metadata = getRequestMetadata(req);
+  let session: any = null;
 
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    // Rate limiting - stricter for payment operations (20 req/15min)
+    const identifier = getRateLimitIdentifier(req);
+    const rateLimitResult = rateLimit(identifier, 20, 15 * 60 * 1000);
+
+    if (!rateLimitResult.success) {
+      logger.warn('Rate limit exceeded for create-order', { ip: metadata.ip });
+      return createRateLimitResponse(rateLimitResult.retryAfter!);
     }
 
-    const { bookingId, amount } = await req.json();
+    // Authentication
+    session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      logger.warn('Unauthorized create-order attempt', { ip: metadata.ip });
+      return createErrorResponse('Unauthorized', 401);
+    }
 
-    if (!bookingId || !amount) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
+    logger.info('Create order request received', {
+      email: session.user.email,
+      method: req.method,
+      url: req.url,
+    });
+
+    // Parse and validate input
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return createErrorResponse('Invalid JSON in request body', 400);
+    }
+
+    const { bookingId, amount } = body;
+
+    // Validate bookingId
+    const validBookingId = validateObjectId(bookingId);
+    if (!validBookingId) {
+      logger.warn('Invalid bookingId for create-order', {
+        bookingId,
+        email: session.user.email,
+      });
+      return createErrorResponse('Invalid booking ID format', 400);
+    }
+
+    // Validate amount
+    const validAmount = validateInteger(amount, 1, 10000000); // 1 to 1 crore
+    if (validAmount === null) {
+      logger.warn('Invalid amount for create-order', {
+        amount,
+        email: session.user.email,
+      });
+      return createErrorResponse('Amount must be between ₹1 and ₹1,00,00,000', 400);
     }
 
     await dbConnect();
 
-    const booking = await Booking.findById(bookingId);
+    // Fetch booking with defensive checks
+    const booking = await Booking.findById(validBookingId).lean();
 
     if (!booking) {
-      return NextResponse.json(
-        { error: 'Booking not found' },
-        { status: 404 }
-      );
+      logger.warn('Booking not found for create-order', {
+        bookingId: validBookingId,
+        email: session.user.email,
+      });
+      return createErrorResponse('Booking not found', 404);
     }
 
-    // Verify this is the student's booking
+    // Defensive null checks
+    if (!booking.studentId || !booking.status || typeof booking.totalAmount !== 'number') {
+      logger.error('Booking has invalid data for create-order', {
+        bookingId: validBookingId,
+        hasStudentId: !!booking.studentId,
+        hasStatus: !!booking.status,
+        hasTotalAmount: typeof booking.totalAmount === 'number',
+      });
+      return createErrorResponse('Invalid booking data. Please contact support.', 500);
+    }
+
+    // Authorization - verify ownership
     if (booking.studentId.toString() !== session.user.id) {
-      return NextResponse.json(
-        { error: 'This is not your booking' },
-        { status: 403 }
-      );
+      logger.logSecurity('UNAUTHORIZED_CREATE_ORDER_ATTEMPT', {
+        email: session.user.email,
+        bookingId: validBookingId,
+        bookingOwner: booking.studentId.toString(),
+      });
+      return createErrorResponse('You can only create orders for your own bookings', 403);
     }
 
-    // Can only pay for confirmed bookings
+    // Business logic - status validation
     if (booking.status !== 'confirmed') {
-      return NextResponse.json(
-        { error: `Cannot pay for ${booking.status} booking` },
-        { status: 400 }
-      );
+      logger.info('Invalid booking status for create-order', {
+        bookingId: validBookingId,
+        status: booking.status,
+        email: session.user.email,
+      });
+      return createErrorResponse(`Cannot create order for ${booking.status} booking`, 400);
     }
 
-    // Generate a simple order ID for tracking
-    const orderId = `booking_${bookingId}_${Date.now()}`;
+    // Verify amount matches booking amount
+    if (Math.abs(validAmount - booking.totalAmount) > 0.01) {
+      logger.warn('Amount mismatch for create-order', {
+        requestedAmount: validAmount,
+        bookingAmount: booking.totalAmount,
+        bookingId: validBookingId,
+        email: session.user.email,
+      });
+      return createErrorResponse('Amount does not match booking total', 400);
+    }
 
-    // Save order ID to booking
-    booking.razorpayOrderId = orderId;
-    await booking.save();
+    // Check for existing order (idempotency)
+    if (booking.razorpayOrderId && booking.paymentStatus !== 'failed') {
+      logger.info('Order already exists', {
+        bookingId: validBookingId,
+        orderId: booking.razorpayOrderId,
+        paymentStatus: booking.paymentStatus,
+        email: session.user.email,
+      });
 
-    return NextResponse.json({
-      orderId,
-      key: process.env.RAZORPAY_KEY_ID || 'test_key',
-      bookingId,
-      amount,
+      const response = NextResponse.json(
+        {
+          success: true,
+          orderId: booking.razorpayOrderId,
+          key: process.env.RAZORPAY_KEY_ID || 'rzp_test_mock',
+          bookingId: validBookingId,
+          amount: booking.totalAmount,
+          message: 'Using existing order',
+          timestamp: new Date().toISOString(),
+        },
+        { status: 200 }
+      );
+
+      addSecurityHeaders(response);
+      addRateLimitHeaders(response, 20, rateLimitResult.remaining, rateLimitResult.resetTime);
+
+      return response;
+    }
+
+    // Generate order ID (in production, create Razorpay order via API)
+    const orderId = `order_${crypto.randomBytes(16).toString('hex')}`;
+
+    // Update booking with order ID
+    await Booking.findByIdAndUpdate(validBookingId, {
+      razorpayOrderId: orderId,
+      paymentStatus: 'pending',
     });
-  } catch (error: any) {
-    console.error('Error creating payment order:', error);
 
-    return NextResponse.json(
-      { error: error.message || 'Failed to create payment order' },
-      { status: 500 }
+    logger.logSecurity('PAYMENT_ORDER_CREATED', {
+      email: session.user.email,
+      bookingId: validBookingId,
+      orderId,
+      amount: booking.totalAmount,
+    });
+
+    // Log performance
+    const duration = Date.now() - startTime;
+    if (duration > 1000) {
+      logger.warn('Slow create-order request', {
+        route: 'POST /api/bookings/create-order',
+        duration,
+      });
+    }
+
+    const response = NextResponse.json(
+      {
+        success: true,
+        orderId,
+        key: process.env.RAZORPAY_KEY_ID || 'rzp_test_mock',
+        bookingId: validBookingId,
+        amount: booking.totalAmount,
+        currency: 'INR',
+        timestamp: new Date().toISOString(),
+      },
+      { status: 201 }
     );
+
+    addSecurityHeaders(response);
+    addRateLimitHeaders(response, 20, rateLimitResult.remaining, rateLimitResult.resetTime);
+
+    return response;
+  } catch (error: any) {
+    logger.error('Create order failed', sanitizeErrorForLog(error), {
+      metadata,
+      user: session?.user?.email || 'unknown',
+    });
+
+    // Handle specific errors
+    if (error.name === 'CastError') {
+      return createErrorResponse('Invalid ID format', 400);
+    }
+
+    return createErrorResponse('Failed to create payment order. Please try again.', 500);
   }
+}
+
+function createRateLimitResponse(retryAfter: number): NextResponse {
+  const response = NextResponse.json(
+    {
+      error: 'Too many requests',
+      retryAfter,
+      timestamp: new Date().toISOString(),
+    },
+    {
+      status: 429,
+      headers: {
+        'Retry-After': retryAfter.toString(),
+      },
+    }
+  );
+
+  addSecurityHeaders(response);
+  return response;
 }

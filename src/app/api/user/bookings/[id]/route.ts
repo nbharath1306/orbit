@@ -6,87 +6,159 @@ import User from '@/models/User';
 import Booking from '@/models/Booking';
 import {
   rateLimit,
-  getClientIp,
-  createErrorResponse,
+  getRateLimitIdentifier,
   addSecurityHeaders,
-  isValidObjectId,
-} from '@/lib/security';
+  addRateLimitHeaders,
+  createErrorResponse,
+  validateObjectId,
+  getRequestMetadata,
+  sanitizeErrorForLog,
+} from '@/lib/security-enhanced';
+import { logger } from '@/lib/logger';
 
+/**
+ * GET /api/user/bookings/[id]
+ * Retrieves a specific booking's details
+ * Security: Rate limited, authenticated, ownership verified
+ */
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const startTime = Date.now();
+  const metadata = getRequestMetadata(req);
+  let session: any = null;
+
   try {
-    // Rate limiting
-    const clientIp = getClientIp(req);
-    const rateLimitResult = rateLimit(`booking-detail-${clientIp}`, 100, 60000);
+    // Rate limiting - moderate for read operations (100 req/15min)
+    const identifier = getRateLimitIdentifier(req);
+    const rateLimitResult = rateLimit(identifier, 100, 15 * 60 * 1000);
 
     if (!rateLimitResult.success) {
-      const response = createErrorResponse('Too many requests', 429);
-      response.headers.set('Retry-After', String(Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)));
-      return addSecurityHeaders(response);
+      logger.warn('Rate limit exceeded for booking details', { ip: metadata.ip });
+      return createRateLimitResponse(rateLimitResult.retryAfter!);
     }
 
-    // Authentication check
-    const session = await getServerSession(authOptions);
-
+    // Authentication
+    session = await getServerSession(authOptions);
     if (!session?.user?.email) {
-      return addSecurityHeaders(createErrorResponse('Unauthorized', 401));
+      logger.warn('Unauthorized booking details access attempt', { ip: metadata.ip });
+      return createErrorResponse('Unauthorized', 401);
     }
 
+    // Get and validate booking ID
     const { id } = await params;
+    const validBookingId = validateObjectId(id);
 
-    // Validate ObjectId format
-    if (!isValidObjectId(id)) {
-      return addSecurityHeaders(createErrorResponse('Invalid booking ID format', 400));
+    if (!validBookingId) {
+      logger.warn('Invalid booking ID for details', {
+        bookingId: id,
+        email: session.user.email,
+      });
+      return createErrorResponse('Invalid booking ID format', 400);
     }
 
-    // Database connection
+    logger.info('Booking details request received', {
+      email: session.user.email,
+      bookingId: validBookingId,
+      method: req.method,
+    });
+
     await dbConnect();
 
-    // Find user
+    // Find user with defensive check
     const user = await User.findOne({ email: session.user.email })
       .select('_id')
       .lean()
       .exec();
 
     if (!user) {
-      return addSecurityHeaders(createErrorResponse('User not found', 404));
+      logger.warn('User not found for booking details', { email: session.user.email });
+      return createErrorResponse('User not found', 404);
     }
 
     // Find booking with ownership check
     const booking = await Booking.findOne({
-      _id: id,
+      _id: validBookingId,
       studentId: user._id, // Ensure user owns this booking
     })
-      .populate('propertyId', 'title slug location images amenities pricing rooms')
+      .populate('propertyId', 'title slug location images amenities pricing rooms description')
       .populate('ownerId', 'name email phone image isVerified')
       .lean()
       .exec();
 
     if (!booking) {
-      return addSecurityHeaders(
-        createErrorResponse('Booking not found or access denied', 404)
-      );
+      logger.warn('Booking not found or access denied', {
+        bookingId: validBookingId,
+        userId: user._id.toString(),
+        email: session.user.email,
+      });
+      return createErrorResponse('Booking not found or you do not have permission to view it', 404);
     }
 
-    const response = NextResponse.json(booking);
+    // Defensive null checks
+    if (!booking.studentId || !booking.status) {
+      logger.error('Booking has invalid data', {
+        bookingId: validBookingId,
+        hasStudentId: !!booking.studentId,
+        hasStatus: !!booking.status,
+      });
+      return createErrorResponse('Invalid booking data. Please contact support.', 500);
+    }
 
-    // Add rate limit headers
-    response.headers.set('X-RateLimit-Limit', '100');
-    response.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining));
-    response.headers.set('X-RateLimit-Reset', String(rateLimitResult.resetTime));
+    // Log performance
+    const duration = Date.now() - startTime;
+    if (duration > 1000) {
+      logger.warn('Slow booking details query', {
+        route: 'GET /api/user/bookings/[id]',
+        duration,
+        bookingId: validBookingId,
+      });
+    }
 
-    return addSecurityHeaders(response);
-  } catch (error) {
-    console.error('Error fetching booking:', error);
-    const message = error instanceof Error ? error.message : 'Internal server error';
-    return addSecurityHeaders(
-      createErrorResponse(
-        'Failed to fetch booking details',
-        500,
-        process.env.NODE_ENV === 'development' ? message : undefined
-      )
+    const response = NextResponse.json(
+      {
+        success: true,
+        booking,
+        timestamp: new Date().toISOString(),
+      },
+      { status: 200 }
     );
+
+    addSecurityHeaders(response);
+    addRateLimitHeaders(response, 100, rateLimitResult.remaining, rateLimitResult.resetTime);
+
+    return response;
+  } catch (error: any) {
+    logger.error('Booking details query failed', sanitizeErrorForLog(error), {
+      metadata,
+      user: session?.user?.email || 'unknown',
+    });
+
+    // Handle specific errors
+    if (error.name === 'CastError') {
+      return createErrorResponse('Invalid ID format', 400);
+    }
+
+    return createErrorResponse('Failed to fetch booking details. Please try again.', 500);
   }
+}
+
+function createRateLimitResponse(retryAfter: number): NextResponse {
+  const response = NextResponse.json(
+    {
+      error: 'Too many requests',
+      retryAfter,
+      timestamp: new Date().toISOString(),
+    },
+    {
+      status: 429,
+      headers: {
+        'Retry-After': retryAfter.toString(),
+      },
+    }
+  );
+
+  addSecurityHeaders(response);
+  return response;
 }

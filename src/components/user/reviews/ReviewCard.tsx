@@ -3,7 +3,7 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Star, ThumbsUp, Flag, CheckCircle, MessageSquare } from 'lucide-react';
+import { Star, ThumbsUp, Flag, CheckCircle, MessageSquare, Edit2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
@@ -11,6 +11,7 @@ import { toast } from 'react-hot-toast';
 interface Review {
   _id: string;
   studentId: {
+    _id?: string;
     name: string;
     image?: string;
   };
@@ -43,12 +44,14 @@ interface ReviewCardProps {
   review: Review;
   showProperty?: boolean;
   onUpdate?: () => void;
+  isAuthor?: boolean;
 }
 
-export default function ReviewCard({ review, showProperty = false, onUpdate }: ReviewCardProps) {
+export default function ReviewCard({ review, showProperty = false, onUpdate, isAuthor = false }: ReviewCardProps) {
   const [marked, setMarked] = useState(false);
   const [reported, setReported] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -102,6 +105,41 @@ export default function ReviewCard({ review, showProperty = false, onUpdate }: R
     } catch (error) {
       console.error('Error reporting:', error);
       toast.error('Network error - please try again');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!isAuthor) return;
+
+    if (!confirm('Are you sure you want to delete this review? This action cannot be undone.')) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/reviews/${review._id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('✅ Review deleted successfully', { duration: 3000 });
+        if (onUpdate) {
+          setTimeout(() => {
+            onUpdate();
+          }, 500);
+        }
+      } else {
+        const errorMsg = data.message || data.error || 'Failed to delete review';
+        toast.error(errorMsg, { duration: 3000 });
+      }
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      toast.error('Network error - please try again', { duration: 3000 });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -301,6 +339,35 @@ export default function ReviewCard({ review, showProperty = false, onUpdate }: R
           <Flag className={`w-3 h-3 mr-1 ${reported ? 'fill-current' : ''}`} />
           {reported ? 'Reported' : 'Report'}
         </Button>
+
+        {/* Author Actions */}
+        {isAuthor && (
+          <>
+            <div className="flex-1 hidden sm:block" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs font-semibold px-2 py-1 h-7 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 hover:border-blue-500/30 border border-white/10 rounded-full transition-all"
+              onClick={() => {
+                // TODO: Implement edit functionality
+                toast.loading('Edit feature coming soon...', { duration: 2000 });
+              }}
+            >
+              <Edit2 className="w-3 h-3 mr-1" />
+              Edit
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={isDeleting}
+              className="text-xs font-semibold px-2 py-1 h-7 text-red-400 hover:text-red-300 hover:bg-red-500/10 hover:border-red-500/30 border border-white/10 rounded-full transition-all disabled:opacity-50"
+              onClick={handleDelete}
+            >
+              <Trash2 className="w-3 h-3 mr-1" />
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </>
+        )}
       </div>
     </Card>
   );

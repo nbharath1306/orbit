@@ -1,12 +1,15 @@
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import { MapPin, Check, Shield, Star, User, Share2, Heart } from 'lucide-react';
+import { MapPin, Check, Shield, Star, User as UserIcon, Share2, Heart } from 'lucide-react';
 import dbConnect from '@/lib/db';
 import Property from '@/models/Property';
 import Review from '@/models/Review';
+import User from '@/models/User';
 import { BookingButton } from '@/components/BookingButton';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { Button } from '@/components/ui/button';
@@ -168,6 +171,25 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
 
     const { reviews, averages } = await getPropertyReviews(property._id.toString());
 
+    // Get current user session
+    const session = await getServerSession(authOptions);
+    let currentUserId: string | null = null;
+    
+    if (session?.user?.email) {
+        try {
+            const currentUser = await User.findOne({ email: session.user.email }).select('_id').lean();
+            currentUserId = currentUser?._id?.toString() || null;
+        } catch (error) {
+            console.error('Error fetching current user:', error);
+        }
+    }
+
+    // Mark which reviews are authored by current user
+    const reviewsWithAuthorInfo = reviews.map((review: any) => ({
+        ...review,
+        isAuthor: currentUserId ? review.studentId?._id === currentUserId : false,
+    }));
+
     const propData = property as Record<string, unknown>;
     const location = propData.location as Record<string, unknown>;
     const media = propData.media as Record<string, unknown>;
@@ -292,11 +314,12 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
 
                                 {reviews.length > 0 ? (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        {reviews.map((review: any) => (
+                                        {reviewsWithAuthorInfo.map((review: any) => (
                                             <ReviewCard 
                                                 key={review._id} 
                                                 review={review}
                                                 showProperty={false}
+                                                isAuthor={review.isAuthor}
                                             />
                                         ))}
                                     </div>

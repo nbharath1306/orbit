@@ -146,11 +146,12 @@ export async function POST(req: NextRequest) {
             return createErrorResponse('Cannot book your own property', 400);
         }
 
-        // Check for existing active booking
+        // Check for existing active booking (only prevent if booking is currently active/pending)
+        // Allow rebooking after previous booking is completed/cancelled
         const existingBooking = await Booking.findOne({
             studentId: user._id,
             propertyId: validPropertyId,
-            status: { $in: ['pending', 'confirmed', 'checked-in'] },
+            status: { $in: ['pending', 'confirmed', 'checked-in', 'paid'] },
         }).lean();
 
         if (existingBooking) {
@@ -159,7 +160,7 @@ export async function POST(req: NextRequest) {
                 propertyId: validPropertyId,
                 existingBookingId: existingBooking._id
             });
-            return createErrorResponse('You already have an active booking for this property', 400);
+            return createErrorResponse('You already have an active booking for this property. Please wait for it to be completed or cancelled before booking again.', 400);
         }
 
         // Calculate pricing with defensive checks

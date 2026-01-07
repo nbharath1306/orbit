@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -60,6 +60,8 @@ export default function BookingModal({ property, trigger }: BookingModalProps) {
   const [showApprovalMessage, setShowApprovalMessage] = useState(false);
   const [reservationAmount, setReservationAmount] = useState(0);
   const [roomAvailability, setRoomAvailability] = useState<Record<string, { total: number; booked: number }> | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const modalContentRef = useRef<HTMLDivElement>(null);
   
   const [formData, setFormData] = useState({
     checkInDate: '',
@@ -139,7 +141,15 @@ export default function BookingModal({ property, trigger }: BookingModalProps) {
       return;
     }
 
+    // If step 1, move to step 2 for confirmation
+    if (step === 1) {
+      setStep(2);
+      return;
+    }
+
+    // Step 2 - Create booking
     setLoading(true);
+    setErrorMessage(''); // Clear any previous errors
 
     try {
       const response = await fetch('/api/bookings/create', {
@@ -152,24 +162,60 @@ export default function BookingModal({ property, trigger }: BookingModalProps) {
       });
 
       const data = await response.json();
+      
+      console.log('Booking API response:', { 
+        ok: response.ok, 
+        status: response.status, 
+        data 
+      });
 
       if (!response.ok) {
+        setLoading(false);
+        
+        // Show error INSIDE the modal
+        let errorMsg = data.error || 'Failed to create booking. Please try again.';
+        
+        console.log('Booking blocked:', errorMsg);
+        
         // Handle specific error cases with better messages
-        if (data.error?.includes('already have an active booking')) {
-          toast.error(
-            `You already have an active booking for ${property.title}. Please cancel or complete your existing booking first.`,
-            { duration: 5000 }
-          );
-        } else if (data.error?.includes('fully booked')) {
-          toast.error(
-            `Sorry, ${property.title} is fully booked for the selected dates. Try different dates or check other properties.`,
-            { duration: 5000 }
-          );
+        if (errorMsg.includes('already have an active booking')) {
+          setErrorMessage('🚫 You already have an active booking for this property. Please complete or cancel your existing booking first before booking again.');
+          // Scroll to top to show error
+          modalContentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+          return; // Keep modal open
+          
+        } else if (errorMsg.includes('fully booked')) {
+          setErrorMessage('🔒 Sorry, this property is fully booked for the selected period. Please try different dates or check other properties.');
+          // Scroll to top to show error
+          modalContentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+          return; // Keep modal open
         } else {
-          toast.error(data.error || 'Failed to create booking. Please try again.', { duration: 4000 });
+          setErrorMessage(errorMsg);
+          // Scroll to top to show error
+          modalContentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+          return; // Keep modal open
         }
-        return;
       }
+
+      // Success case
+      toast.success(
+        `🎉 Booking confirmed! Your reservation for ${property.title} has been created.`,
+        { 
+          duration: 5000,
+          style: {
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            color: '#fff',
+            fontSize: '15px',
+            fontWeight: '600',
+            padding: '20px 24px',
+            borderRadius: '16px',
+            border: '2px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
+            maxWidth: '550px',
+          },
+          position: 'top-center',
+        }
+      );
 
       // Calculate and show approval message
       const monthlyRent = property.price.amount;
@@ -235,8 +281,18 @@ export default function BookingModal({ property, trigger }: BookingModalProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto">
+        <div ref={modalContentRef} className="flex-1 overflow-y-auto">
           <form onSubmit={handleSubmit} className="space-y-6 p-6">
+            
+            {/* Error Message Display */}
+            {errorMessage && (
+              <div className="bg-red-500/10 border-2 border-red-500 rounded-xl p-5 mb-4 animate-pulse">
+                <p className="text-red-400 font-semibold text-center text-lg leading-relaxed">
+                  {errorMessage}
+                </p>
+              </div>
+            )}
+            
             {step === 1 ? (
               <>
                 {/* Check-in Date */}

@@ -66,6 +66,7 @@ export default function UserTopNav({ unreadCount = 0, userName = 'User', userAva
     { name: 'Dashboard', path: '/dashboard', icon: null },
     { name: 'Bookings', path: '/dashboard/bookings', icon: Calendar },
     { name: 'Saved', path: '/dashboard/saved', icon: Heart },
+    { name: 'Reviews', path: '/dashboard/reviews', icon: Star },
     { name: 'Messages', path: '/dashboard/messages', icon: MessageSquare, badge: liveUnreadCount },
   ];
 

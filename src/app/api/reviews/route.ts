@@ -204,9 +204,9 @@ export async function POST(req: NextRequest) {
   let session: any = null;
 
   try {
-    // Strict rate limiting for spam prevention (10 req/15min)
+    // Rate limiting for review submission (50 per hour - allows multiple attempts with time spacing)
     const identifier = getRateLimitIdentifier(req);
-    const rateLimitResult = rateLimit(identifier, 10, 15 * 60 * 1000);
+    const rateLimitResult = rateLimit(identifier, 50, 60 * 60 * 1000);
 
     if (!rateLimitResult.success) {
       logger.warn('Rate limit exceeded for review creation', { ip: metadata.ip });

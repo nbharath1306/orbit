@@ -25,7 +25,7 @@ interface ReviewModalProps {
 export default function ReviewModal({ propertyId, bookingId, onSuccess, trigger }: ReviewModalProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden';
@@ -36,7 +36,7 @@ export default function ReviewModal({ propertyId, bookingId, onSuccess, trigger 
       document.body.style.overflow = '';
     };
   }, [open]);
-  
+
   const [formData, setFormData] = useState({
     rating: 0,
     cleanliness: 0,
@@ -100,8 +100,8 @@ export default function ReviewModal({ propertyId, bookingId, onSuccess, trigger 
       return;
     }
 
-    if (comment.length < 50) {
-      toast.error('✏️ Comment must be at least 50 characters (currently ${comment.length}/50)', { duration: 3000 });
+    if (formData.comment.length < 50) {
+      toast.error(`✏️ Comment must be at least 50 characters (currently ${formData.comment.length}/50)`, { duration: 3000 });
       return;
     }
 
@@ -133,16 +133,16 @@ export default function ReviewModal({ propertyId, bookingId, onSuccess, trigger 
 
       toast.success('✅ Thank you! Your review has been submitted successfully and will help other students.', { duration: 4000 });
       setOpen(false);
-      
+
       if (onSuccess) {
         onSuccess();
       }
-      
+
       // Reload page to show new review
       setTimeout(() => {
         window.location.reload();
       }, 1000);
-      
+
       setFormData({
         rating: 0,
         cleanliness: 0,
@@ -181,11 +181,10 @@ export default function ReviewModal({ propertyId, bookingId, onSuccess, trigger 
               className="focus:outline-none transition-all hover:scale-110"
             >
               <Star
-                className={`w-8 h-8 ${
-                  star <= value 
-                    ? 'fill-yellow-400 text-yellow-400' 
+                className={`w-8 h-8 ${star <= value
+                    ? 'fill-yellow-400 text-yellow-400'
                     : 'text-zinc-700 hover:text-zinc-600'
-                }`}
+                  }`}
               />
             </button>
           ))}
@@ -371,9 +370,9 @@ export default function ReviewModal({ propertyId, bookingId, onSuccess, trigger 
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700" 
+            <Button
+              type="submit"
+              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               disabled={loading}
             >
               {loading ? 'Submitting...' : '✓ Submit Review'}

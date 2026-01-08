@@ -21,6 +21,8 @@ export async function POST(req: NextRequest) {
   const startTime = Date.now();
   const metadata = getRequestMetadata(req);
   
+  let session = null;
+  
   try {
     // Rate limiting - 30 accepts per 15 minutes
     const identifier = getRateLimitIdentifier(req);
@@ -31,7 +33,7 @@ export async function POST(req: NextRequest) {
       return createErrorResponse('Too many booking actions. Please try again later.', 429);
     }
 
-    const session = await getServerSession(authOptions);
+    session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
       logger.warn('Unauthorized access attempt', { method: 'POST', url: req.url, ip: metadata.ip });

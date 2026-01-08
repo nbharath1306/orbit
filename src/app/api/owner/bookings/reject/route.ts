@@ -6,8 +6,8 @@ import AuditLog from '@/models/AuditLog';
 import Message from '@/models/Message';
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
-import { 
-  rateLimit, 
+import {
+  rateLimit,
   getRateLimitIdentifier,
   addSecurityHeaders,
   createErrorResponse,
@@ -21,7 +21,9 @@ import { logger } from '@/lib/logger';
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
   const metadata = getRequestMetadata(req);
-  
+
+  let session = null;
+
   try {
     // Rate limiting - 30 rejects per 15 minutes
     const identifier = getRateLimitIdentifier(req);
@@ -32,13 +34,13 @@ export async function POST(req: NextRequest) {
       return createErrorResponse('Too many booking actions. Please try again later.', 429);
     }
 
-    const session = await getServerSession(authOptions);
+    session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
       logger.warn('Unauthorized access attempt', { method: 'POST', url: req.url, ip: metadata.ip });
       return createErrorResponse('Unauthorized', 401);
     }
-    
+
     logger.info('Booking reject request', { email: session.user.email, method: 'POST', url: req.url });
 
     let body;
@@ -55,7 +57,7 @@ export async function POST(req: NextRequest) {
       logger.warn('Invalid booking ID in reject request', { bookingId, owner: session.user.email });
       return createErrorResponse('Invalid booking ID format', 400);
     }
-    
+
     // Sanitize rejection reason
     const sanitizedReason = reason ? sanitizeString(reason).slice(0, 500) : 'Owner declined';
 
@@ -64,9 +66,9 @@ export async function POST(req: NextRequest) {
     const booking = await Booking.findById(validBookingId).populate('propertyId').lean();
 
     if (!booking) {
-      logger.warn('Reject attempt for non-existent booking', { 
-        bookingId: validBookingId, 
-        owner: session.user.email 
+      logger.warn('Reject attempt for non-existent booking', {
+        bookingId: validBookingId,
+        owner: session.user.email
       });
       return createErrorResponse('Booking not found', 404);
     }
@@ -89,15 +91,15 @@ export async function POST(req: NextRequest) {
 
     // Can only reject pending or confirmed bookings
     if (!['pending', 'confirmed'].includes(booking.status)) {
-      logger.info('Invalid booking status for reject', { 
-        bookingId: validBookingId, 
-        status: booking.status 
+      logger.info('Invalid booking status for reject', {
+        bookingId: validBookingId,
+        status: booking.status
       });
       return createErrorResponse(`Cannot reject ${booking.status} booking`, 400);
     }
 
     const oldStatus = booking.status;
-    
+
     // Update booking (need to fetch mutable version)
     const updateResult = await Booking.findByIdAndUpdate(
       validBookingId,
@@ -134,14 +136,14 @@ export async function POST(req: NextRequest) {
 
     // Send notification message to student
     try {
-      const studentId = typeof booking.studentId === 'object' && booking.studentId !== null 
-        ? (booking.studentId as any)._id 
+      const studentId = typeof booking.studentId === 'object' && booking.studentId !== null
+        ? (booking.studentId as any)._id
         : booking.studentId;
-      
+
       const rejectionMessage = sanitizedReason && sanitizedReason !== 'Owner declined'
         ? `We're sorry, but your booking request for ${property.title} has been declined. Reason: ${sanitizedReason}`
         : `We're sorry, but your booking request for ${property.title} has been declined by the owner.`;
-      
+
       await Message.create({
         threadId: validBookingId.toString(),
         studentId: new mongoose.Types.ObjectId(studentId),
@@ -154,7 +156,7 @@ export async function POST(req: NextRequest) {
     } catch (msgError) {
       logger.warn('Failed to send notification message', { bookingId: validBookingId, error: msgError });
     }
-    
+
     logger.logSecurity('BOOKING_REJECTED', {
       email: session.user.email,
       bookingId: validBookingId,
@@ -171,20 +173,20 @@ export async function POST(req: NextRequest) {
       },
       timestamp: new Date().toISOString(),
     });
-    
+
     addSecurityHeaders(response);
-    
+
     const duration = Date.now() - startTime;
     if (duration > 1000) {
       logger.warn('Slow request', { route: 'POST /api/owner/bookings/reject', duration });
     }
-    
+
     return response;
-    
+
   } catch (error: any) {
-    logger.error('Booking reject failed', sanitizeErrorForLog(error), { 
+    logger.error('Booking reject failed', sanitizeErrorForLog(error), {
       metadata,
-      owner: session?.user?.email 
+      owner: session?.user?.email
     });
 
     return createErrorResponse(

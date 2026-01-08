@@ -3,52 +3,126 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import dbConnect from '@/lib/db';
 import mongoose from 'mongoose';
+import {
+  rateLimit,
+  getRateLimitIdentifier,
+  addSecurityHeaders,
+  addRateLimitHeaders,
+  createErrorResponse,
+  sanitizeString,
+  validateObjectId,
+  getRequestMetadata,
+  sanitizeErrorForLog,
+} from '@/lib/security-enhanced';
+import { logger } from '@/lib/logger';
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
+  const startTime = Date.now();
+  const metadata = getRequestMetadata(req);
+  let session: any = null;
+
   try {
-    const session = await getServerSession(authOptions);
+    // Rate limiting - POST operation (strict for promotion requests)
+    const identifier = getRateLimitIdentifier(req);
+    const rateLimitResult = rateLimit(identifier, 10, 15 * 60 * 1000);
+
+    if (!rateLimitResult.success) {
+      logger.warn('Rate limit exceeded', {
+        ip: metadata.ip,
+        url: req.url,
+      });
+      const response = createErrorResponse(
+        'Too many requests. Please try again later.',
+        429
+      );
+      addRateLimitHeaders(response, 10, 0, rateLimitResult.resetTime);
+      return response;
+    }
+
+    // Authentication validation
+    session = await getServerSession(authOptions);
 
     if (!session || !session.user?.email) {
-      return NextResponse.json(
-        { error: 'Unauthorized: User not authenticated' },
-        { status: 401 }
+      logger.warn('Unauthorized access attempt', {
+        method: req.method,
+        url: req.url,
+        ip: metadata.ip,
+      });
+      return createErrorResponse('Unauthorized', 401);
+    }
+
+    logger.info('Owner promotion request received', {
+      email: session.user.email,
+      method: req.method,
+      url: req.url,
+    });
+
+    // Parse and validate JSON body
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return createErrorResponse('Invalid JSON in request body', 400);
+    }
+
+    const { propertyId, propertyTitle } = body;
+
+    // Validate property ID if provided
+    if (propertyId) {
+      const validPropertyId = validateObjectId(propertyId);
+      if (!validPropertyId) {
+        return createErrorResponse('Invalid property ID format', 400);
+      }
+    }
+
+    // Sanitize property title
+    const sanitizedTitle = propertyTitle
+      ? sanitizeString(propertyTitle).slice(0, 200)
+      : '';
+
+    if (sanitizedTitle.length < 3) {
+      return createErrorResponse(
+        'Property title must be at least 3 characters',
+        400
       );
     }
 
     await dbConnect();
 
-    const { propertyId, propertyTitle } = await request.json();
-
     const User = mongoose.model('User');
     const user = await User.findById(session.user.id);
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      logger.warn('User not found', { email: session.user.email });
+      return createErrorResponse('User not found', 404);
     }
 
     // If already owner, return error
     if (user.role === 'owner') {
-      return NextResponse.json(
-        { error: 'User is already an owner' },
-        { status: 400 }
-      );
+      logger.info('User is already an owner', {
+        email: session.user.email,
+        userId: session.user.id,
+      });
+      return createErrorResponse('You are already an owner', 400);
     }
 
     const OwnerPromotionRequest = mongoose.model('OwnerPromotionRequest');
 
-    // Check if already has pending request
+    // Check if already has pending request (duplicate prevention)
     const existingRequest = await OwnerPromotionRequest.findOne({
       userId: user._id,
       status: 'pending',
     });
 
     if (existingRequest) {
-      return NextResponse.json(
-        { error: 'You already have a pending owner promotion request' },
-        { status: 400 }
+      logger.warn('Duplicate promotion request attempt', {
+        email: session.user.email,
+        userId: session.user.id,
+        existingRequestId: existingRequest._id.toString(),
+      });
+      return createErrorResponse(
+        'You already have a pending owner promotion request',
+        409
       );
     }
 
@@ -57,37 +131,112 @@ export async function POST(request: NextRequest) {
       userId: user._id,
       userEmail: user.email,
       userName: user.name,
-      propertyId,
-      propertyTitle,
+      propertyId: propertyId || null,
+      propertyTitle: sanitizedTitle,
       status: 'pending',
+      createdAt: new Date(),
     });
 
     await promotionRequest.save();
 
-    return NextResponse.json({
-      success: true,
-      message: 'Owner promotion request submitted. Waiting for admin approval.',
-      promotionRequest,
+    logger.logSecurity('OWNER_PROMOTION_REQUESTED', {
+      email: session.user.email,
+      userId: session.user.id,
+      requestId: promotionRequest._id.toString(),
+      propertyTitle: sanitizedTitle,
     });
-  } catch (error) {
-    console.error('Error requesting owner status:', error);
-    return NextResponse.json(
-      { error: 'Failed to request owner status' },
-      { status: 500 }
+
+    // Log performance warning if slow
+    const duration = Date.now() - startTime;
+    if (duration > 1000) {
+      logger.warn('Slow request', {
+        route: `${req.method} ${req.url}`,
+        duration,
+        user: session.user.email,
+      });
+    }
+
+    const response = NextResponse.json(
+      {
+        success: true,
+        message: 'Owner promotion request submitted. Waiting for admin approval.',
+        requestId: promotionRequest._id.toString(),
+        timestamp: new Date().toISOString(),
+      },
+      { status: 201 }
+    );
+
+    addSecurityHeaders(response);
+    addRateLimitHeaders(
+      response,
+      10,
+      rateLimitResult.remaining,
+      rateLimitResult.resetTime
+    );
+
+    return response;
+  } catch (error: any) {
+    logger.error(
+      'Error requesting owner status',
+      sanitizeErrorForLog(error),
+      {
+        metadata,
+        user: session?.user?.email || 'unknown',
+      }
+    );
+
+    // Handle duplicate request error
+    if (error.code === 11000) {
+      return createErrorResponse('Duplicate promotion request', 409);
+    }
+
+    return createErrorResponse(
+      'Failed to request owner status. Please try again later.',
+      500
     );
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
+  const startTime = Date.now();
+  const metadata = getRequestMetadata(req);
+  let session: any = null;
+
   try {
-    const session = await getServerSession(authOptions);
+    // Rate limiting - GET operation
+    const identifier = getRateLimitIdentifier(req);
+    const rateLimitResult = rateLimit(identifier, 100, 15 * 60 * 1000);
+
+    if (!rateLimitResult.success) {
+      logger.warn('Rate limit exceeded', {
+        ip: metadata.ip,
+        url: req.url,
+      });
+      const response = createErrorResponse(
+        'Too many requests. Please try again later.',
+        429
+      );
+      addRateLimitHeaders(response, 100, 0, rateLimitResult.resetTime);
+      return response;
+    }
+
+    // Authentication validation
+    session = await getServerSession(authOptions);
 
     if (!session || !session.user?.email) {
-      return NextResponse.json(
-        { error: 'Unauthorized: User not authenticated' },
-        { status: 401 }
-      );
+      logger.warn('Unauthorized access attempt', {
+        method: req.method,
+        url: req.url,
+        ip: metadata.ip,
+      });
+      return createErrorResponse('Unauthorized', 401);
     }
+
+    logger.info('Fetch promotion request received', {
+      email: session.user.email,
+      method: req.method,
+      url: req.url,
+    });
 
     await dbConnect();
 
@@ -95,17 +244,54 @@ export async function GET(request: NextRequest) {
 
     const promotionRequest = await OwnerPromotionRequest.findOne({
       userId: session.user.id,
-    }).sort({ createdAt: -1 });
+    })
+      .sort({ createdAt: -1 })
+      .lean();
 
-    return NextResponse.json({
-      success: true,
-      promotionRequest,
+    logger.info('Promotion request retrieved', {
+      email: session.user.email,
+      hasRequest: !!promotionRequest,
+      status: promotionRequest?.status || 'none',
     });
-  } catch (error) {
-    console.error('Error fetching promotion request:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch promotion request' },
-      { status: 500 }
+
+    const response = NextResponse.json(
+      {
+        success: true,
+        promotionRequest: promotionRequest
+          ? {
+              id: promotionRequest._id.toString(),
+              status: promotionRequest.status,
+              propertyTitle: promotionRequest.propertyTitle,
+              createdAt: promotionRequest.createdAt,
+            }
+          : null,
+        timestamp: new Date().toISOString(),
+      },
+      { status: 200 }
+    );
+
+    addSecurityHeaders(response);
+    addRateLimitHeaders(
+      response,
+      100,
+      rateLimitResult.remaining,
+      rateLimitResult.resetTime
+    );
+
+    return response;
+  } catch (error: any) {
+    logger.error(
+      'Error fetching promotion request',
+      sanitizeErrorForLog(error),
+      {
+        metadata,
+        user: session?.user?.email || 'unknown',
+      }
+    );
+
+    return createErrorResponse(
+      'Failed to fetch promotion request. Please try again later.',
+      500
     );
   }
 }

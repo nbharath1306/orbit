@@ -249,9 +249,11 @@ export default function OwnerReviewsPage() {
                       <p className="text-sm font-bold text-emerald-400">Your Response</p>
                     </div>
                     <p className="text-zinc-200 leading-relaxed mb-2">{review.ownerResponse.comment}</p>
-                    <p className="text-xs text-zinc-500">
-                      Responded on {format(new Date(review.ownerResponse.createdAt), 'MMM dd, yyyy')}
-                    </p>
+                    {review.ownerResponse.createdAt && (
+                      <p className="text-xs text-zinc-500">
+                        Responded on {format(new Date(review.ownerResponse.createdAt), 'MMM dd, yyyy')}
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <div className="border-t border-white/10 pt-5">

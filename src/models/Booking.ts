@@ -132,6 +132,14 @@ BookingSchema.index({ propertyId: 1, status: 1 });
 BookingSchema.index({ createdAt: -1 });
 BookingSchema.index({ checkInDate: 1 });
 
+// Additional compound indexes for complex queries
+BookingSchema.index({ studentId: 1, status: 1, createdAt: -1 }); // User bookings with sort
+BookingSchema.index({ ownerId: 1, status: 1, createdAt: -1 }); // Owner bookings with sort
+BookingSchema.index({ propertyId: 1, checkInDate: 1, checkOutDate: 1 }); // Availability check
+BookingSchema.index({ status: 1, paymentStatus: 1, createdAt: -1 }); // Admin dashboard
+BookingSchema.index({ razorpayOrderId: 1 }, { sparse: true }); // Payment lookup
+BookingSchema.index({ paymentStatus: 1, status: 1 }); // Payment tracking
+
 // Virtual for booking duration in days
 BookingSchema.virtual('durationDays').get(function() {
     return this.durationMonths * 30;

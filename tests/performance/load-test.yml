@@ -1,0 +1,113 @@
+# Performance Testing Suite
+# Orbit PG - Load and Stress Testing
+
+config:
+  target: "http://localhost:3000"
+  phases:
+    # Warm-up phase
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm-up"
+    # Ramp up phase
+    - duration: 120
+      arrivalRate: 10
+      rampTo: 50
+      name: "Ramp-up load"
+    # Sustained load phase
+    - duration: 300
+      arrivalRate: 50
+      name: "Sustained load"
+    # Spike test
+    - duration: 60
+      arrivalRate: 100
+      name: "Spike test"
+  processor: "./test-helpers.js"
+  plugins:
+    expect: {}
+    metrics-by-endpoint: {}
+
+scenarios:
+  # Public property browsing (most common)
+  - name: "Browse Properties"
+    weight: 40
+    flow:
+      - get:
+          url: "/api/properties"
+          qs:
+            page: "{{ $randomNumber(1, 10) }}"
+            limit: "20"
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - hasProperty: success
+      - think: 2
+      - get:
+          url: "/api/properties/{{ randomPropertyId }}"
+          beforeRequest: "setRandomPropertyId"
+          expect:
+            - statusCode: [200, 404]
+
+  # Property search with filters
+  - name: "Search Properties"
+    weight: 25
+    flow:
+      - get:
+          url: "/api/properties"
+          qs:
+            search: "{{ $randomString() }}"
+            minPrice: "{{ $randomNumber(5000, 15000) }}"
+            maxPrice: "{{ $randomNumber(20000, 50000) }}"
+            page: "1"
+            limit: "20"
+          expect:
+            - statusCode: 200
+
+  # Review browsing
+  - name: "Browse Reviews"
+    weight: 15
+    flow:
+      - get:
+          url: "/api/reviews"
+          qs:
+            page: "{{ $randomNumber(1, 5) }}"
+            limit: "10"
+          expect:
+            - statusCode: 200
+
+  # Health check
+  - name: "Health Check"
+    weight: 10
+    flow:
+      - get:
+          url: "/api/status"
+          expect:
+            - statusCode: 200
+            - hasProperty: status
+            - equals:
+                - "{{ status }}"
+                - "healthy"
+
+  # Authenticated user operations (requires auth)
+  - name: "User Bookings (Authenticated)"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/auth/signin"
+          json:
+            email: "test@example.com"
+            password: "Test123!"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+      - get:
+          url: "/api/user/bookings"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: [200, 401]
+
+# Performance thresholds
+ensure:
+  maxErrorRate: 1  # Max 1% error rate
+  p95: 1000        # 95th percentile < 1000ms
+  p99: 2000        # 99th percentile < 2000ms

@@ -1,0 +1,35 @@
+# Stress Testing Configuration
+# Tests system behavior under extreme load
+
+config:
+  target: "http://localhost:3000"
+  phases:
+    # Gradual increase to find breaking point
+    - duration: 60
+      arrivalRate: 50
+      name: "Phase 1"
+    - duration: 60
+      arrivalRate: 100
+      name: "Phase 2"
+    - duration: 60
+      arrivalRate: 200
+      name: "Phase 3"
+    - duration: 60
+      arrivalRate: 300
+      name: "Phase 4 - Breaking point test"
+    # Cool down
+    - duration: 60
+      arrivalRate: 50
+      name: "Cool down"
+
+scenarios:
+  - name: "Mixed Load"
+    flow:
+      - get:
+          url: "/api/properties"
+      - think: 1
+      - get:
+          url: "/api/reviews"
+      - think: 1
+      - get:
+          url: "/api/status"

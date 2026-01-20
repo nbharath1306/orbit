@@ -116,6 +116,13 @@ ReviewSchema.index({ studentId: 1, createdAt: -1 });
 ReviewSchema.index({ rating: 1 });
 ReviewSchema.index({ isVerifiedStay: 1 });
 
+// Additional indexes for complex queries
+ReviewSchema.index({ propertyId: 1, rating: -1, createdAt: -1 }); // Top rated reviews
+ReviewSchema.index({ propertyId: 1, isVerifiedStay: 1, status: 1 }); // Verified property reviews
+ReviewSchema.index({ status: 1, createdAt: -1 }); // Moderation queue
+ReviewSchema.index({ helpfulCount: -1, createdAt: -1 }); // Most helpful reviews
+ReviewSchema.index({ studentId: 1, propertyId: 1 }, { unique: true }); // One review per user per property
+
 // Ensure one review per booking
 ReviewSchema.index({ bookingId: 1 }, { unique: true, sparse: true });
 

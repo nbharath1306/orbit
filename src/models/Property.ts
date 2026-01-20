@@ -75,6 +75,16 @@ const PropertySchema: Schema<IProperty> = new Schema(
     { timestamps: true }
 );
 
+// Performance Indexes
+PropertySchema.index({ ownerId: 1, createdAt: -1 }); // Owner's properties list
+PropertySchema.index({ slug: 1 }, { unique: true }); // URL lookup
+PropertySchema.index({ 'location.address': 'text', title: 'text', description: 'text' }); // Full-text search
+PropertySchema.index({ 'price.amount': 1 }); // Price filtering
+PropertySchema.index({ averageRating: -1, reviewCount: -1 }); // Sort by rating
+PropertySchema.index({ createdAt: -1 }); // Recent properties
+PropertySchema.index({ 'liveStats.occupiedRooms': 1, 'liveStats.totalRooms': 1 }); // Availability
+PropertySchema.index({ averageRating: 1, 'price.amount': 1 }); // Compound for filtered search
+
 const Property: Model<IProperty> =
     mongoose.models.Property ||
     mongoose.model<IProperty>('Property', PropertySchema);

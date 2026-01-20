@@ -1,0 +1,26 @@
+# Spike Testing Configuration
+# Tests system recovery from sudden traffic spikes
+
+config:
+  target: "http://localhost:3000"
+  phases:
+    # Normal load
+    - duration: 120
+      arrivalRate: 10
+      name: "Normal load"
+    # Sudden spike
+    - duration: 30
+      arrivalRate: 200
+      name: "Traffic spike"
+    # Return to normal
+    - duration: 120
+      arrivalRate: 10
+      name: "Recovery"
+
+scenarios:
+  - name: "Property Access"
+    flow:
+      - get:
+          url: "/api/properties"
+          expect:
+            - statusCode: [200, 429]  # Allow rate limiting

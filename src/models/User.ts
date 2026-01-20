@@ -41,6 +41,14 @@ const UserSchema: Schema<IUser> = new Schema(
     { timestamps: true }
 );
 
+// Performance Indexes
+UserSchema.index({ email: 1 }); // Already unique, but explicit
+UserSchema.index({ role: 1 }); // Filter by role (admin queries)
+UserSchema.index({ blacklisted: 1 }); // Filter blacklisted users
+UserSchema.index({ role: 1, blacklisted: 1 }); // Compound for admin user list
+UserSchema.index({ createdAt: -1 }); // Sort by creation date
+UserSchema.index({ isOnline: 1, lastSeen: -1 }); // Online status queries
+
 const User: Model<IUser> =
     mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 

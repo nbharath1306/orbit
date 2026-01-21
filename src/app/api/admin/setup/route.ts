@@ -6,7 +6,7 @@
  * Only accessible in development environment with strict rate limiting
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import User from '@/models/User';
 import AuditLog from '@/models/AuditLog';
@@ -22,7 +22,7 @@ import {
 } from '@/lib/security-enhanced';
 import { logger } from '@/lib/logger';
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   const response = new Response();
   addSecurityHeaders(response);
 

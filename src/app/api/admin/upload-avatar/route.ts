@@ -3,6 +3,7 @@
  * Secured with rate limiting, validation, and audit logging
  */
 
+import { NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import User from '@/models/User';
@@ -29,7 +30,7 @@ cloudinary.config({
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const response = new Response();
   addSecurityHeaders(response);
 

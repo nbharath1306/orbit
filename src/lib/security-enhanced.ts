@@ -126,6 +126,11 @@ export function sanitizeString(input: unknown): string {
 }
 
 /**
+ * Alias for sanitizeString for backward compatibility
+ */
+export const sanitizeInput = sanitizeString;
+
+/**
  * Sanitize HTML input (allow safe HTML only)
  */
 export function sanitizeHtml(input: string): string {
@@ -453,7 +458,7 @@ export const securityHeaders = {
 /**
  * Add security headers to response
  */
-export function addSecurityHeaders(response: NextResponse): NextResponse {
+export function addSecurityHeaders(response: Response | NextResponse): Response | NextResponse {
   Object.entries(securityHeaders).forEach(([key, value]) => {
     response.headers.set(key, value);
   });
@@ -464,11 +469,11 @@ export function addSecurityHeaders(response: NextResponse): NextResponse {
  * Add rate limit headers to response
  */
 export function addRateLimitHeaders(
-  response: NextResponse,
+  response: Response | NextResponse,
   limit: number,
   remaining: number,
   resetTime: number
-): NextResponse {
+): Response | NextResponse {
   response.headers.set('X-RateLimit-Limit', limit.toString());
   response.headers.set('X-RateLimit-Remaining', remaining.toString());
   response.headers.set('X-RateLimit-Reset', resetTime.toString());
@@ -613,3 +618,24 @@ export function getCorsHeaders(origin?: string): Record<string, string> {
   return headers;
 }
 
+
+/**
+ * Compatibility wrapper for createErrorResponse to match previously used signature
+ */
+export function createProductionErrorResponse(
+  message: string,
+  error: unknown,
+  headers?: Headers
+): NextResponse {
+  // Use createErrorResponse with 500 status
+  const response = createErrorResponse(message, 500, error);
+
+  // Apply headers if provided
+  if (headers) {
+    headers.forEach((value, key) => {
+      response.headers.set(key, value);
+    });
+  }
+
+  return response;
+}

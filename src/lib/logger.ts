@@ -221,11 +221,21 @@ class Logger {
   /**
    * Log authentication event
    */
-  logAuth(event: string, userId?: string, context?: Record<string, unknown>): void {
+  logAuth(event: string, userId?: string, success?: boolean | Record<string, unknown>, context?: Record<string, unknown>): void {
+    let finalContext = context || {};
+    let successFlag: boolean | undefined = undefined;
+
+    if (typeof success === 'boolean') {
+      successFlag = success;
+    } else if (typeof success === 'object' && success !== null) {
+      finalContext = { ...finalContext, ...success };
+    }
+
     this.info(`Auth: ${event}`, {
       type: 'authentication',
       userId,
-      ...context,
+      success: successFlag,
+      ...finalContext,
     });
   }
 

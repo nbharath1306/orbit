@@ -6,12 +6,22 @@ import { Send, Plus, MessageCircle, Loader2, User, ShieldCheck, Lock, Check, Che
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 
+interface Message {
+  _id: string;
+  message: string;
+  senderRole?: string;
+  studentId?: string | { _id: string };
+  createdAt: string;
+  read?: boolean;
+  delivered?: boolean;
+}
+
 interface Conversation {
   threadId: string;
-  lastMessage: any;
+  lastMessage: Message | null;
   unreadCount: number;
-  property?: any;
-  owner?: any;
+  property?: { title?: string; _id?: string; location?: { address?: string } };
+  owner?: { _id: string; name?: string };
 }
 
 interface MessagesContentProps {
@@ -26,7 +36,7 @@ export default function MessagesContent({
   const searchParams = useSearchParams();
   const [conversations, setConversations] = useState(initialConversations);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -71,21 +81,22 @@ export default function MessagesContent({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isOnline: false }),
-      }).catch(() => {});
+      }).catch(() => { });
     };
   }, []);
 
   // Fetch owner online status
   useEffect(() => {
     if (selectedConversation && selectedConv?.owner?._id) {
+      const ownerId = selectedConv.owner._id;
       const fetchOwnerStatus = async () => {
         try {
-          const res = await fetch(`/api/users/online-status?userId=${selectedConv.owner._id}`);
+          const res = await fetch(`/api/users/online-status?userId=${ownerId}`);
           if (res.ok) {
             const data = await res.json();
             setOwnerOnlineStatus(prev => ({
               ...prev,
-              [selectedConv.owner._id]: data.isOnline
+              [ownerId]: data.isOnline
             }));
           }
         } catch (err) {
@@ -106,15 +117,15 @@ export default function MessagesContent({
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
     }
-  }, [messages.length]);
+  }, [messages.length, isLoading]);
 
   // Auto-select thread from URL parameter (only once)
   useEffect(() => {
     if (isInitialized) return;
-    
+
     const threadParam = searchParams.get('thread');
     const propertyParam = searchParams.get('property');
-    
+
     if (threadParam) {
       const existingConv = conversations.find(c => c.threadId === threadParam);
       if (existingConv) {
@@ -172,10 +183,10 @@ export default function MessagesContent({
   // Mark messages as read when viewing
   const markAsRead = useCallback(async (threadId: string) => {
     // Immediately update UI
-    setConversations(prev => prev.map(conv => 
+    setConversations(prev => prev.map(conv =>
       conv.threadId === threadId ? { ...conv, unreadCount: 0 } : conv
     ));
-    
+
     try {
       await fetch('/api/messages/mark-read', {
         method: 'POST',
@@ -192,17 +203,17 @@ export default function MessagesContent({
     if (selectedConversation) {
       // Initial load
       loadMessages(false);
-      
+
       // Mark messages as read
       markAsRead(selectedConversation);
-      
+
       // Start polling after initial load
       pollingIntervalRef.current = setInterval(() => {
         if (!isSending) {
           loadMessages(true); // Silent updates during polling
         }
       }, 3000);
-      
+
       return () => {
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
@@ -219,7 +230,7 @@ export default function MessagesContent({
     const tempMessage = messageInput;
     setMessageInput(''); // Clear input immediately for better UX
     setIsSending(true);
-    
+
     try {
       const [propertyId, ownerId] = selectedConversation.split('-');
 
@@ -297,11 +308,10 @@ export default function MessagesContent({
               <button
                 key={conv.threadId}
                 onClick={() => setSelectedConversation(conv.threadId)}
-                className={`w-full text-left px-3 py-2 rounded-xl transition-colors border flex items-start gap-2 ${
-                  selectedConversation === conv.threadId
-                    ? 'bg-blue-500/20 border-blue-500/30 text-white'
-                    : 'bg-white/5 border-white/5 text-zinc-300 hover:bg-white/10 hover:border-white/10'
-                }`}
+                className={`w-full text-left px-3 py-2 rounded-xl transition-colors border flex items-start gap-2 ${selectedConversation === conv.threadId
+                  ? 'bg-blue-500/20 border-blue-500/30 text-white'
+                  : 'bg-white/5 border-white/5 text-zinc-300 hover:bg-white/10 hover:border-white/10'
+                  }`}
               >
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                   <User className="w-4 h-4 text-white" />
@@ -395,17 +405,24 @@ export default function MessagesContent({
               ) : (
                 <>
                   {messages.map((msg, index) => {
-                    const isMyMessage = msg.studentId === userId || msg.studentId?._id === userId;
+                    const getStudentIdStr = (sid: string | { _id: string } | undefined) => {
+                      if (!sid) return null;
+                      return typeof sid === 'string' ? sid : sid._id;
+                    };
+
+                    const msgStudentId = getStudentIdStr(msg.studentId);
+                    const isMyMessage = msgStudentId === userId;
+
                     const prevMsg = messages[index - 1];
-                    const prevIsMyMessage = prevMsg && (prevMsg.studentId === userId || prevMsg.studentId?._id === userId);
+                    const prevMsgStudentId = prevMsg ? getStudentIdStr(prevMsg.studentId) : null;
+                    const prevIsMyMessage = prevMsg && (prevMsgStudentId === userId);
                     const showAvatar = !prevMsg || prevIsMyMessage !== isMyMessage;
-                    
+
                     return (
                       <div
                         key={msg._id}
-                        className={`flex gap-2 items-end ${
-                          isMyMessage ? 'justify-end' : 'justify-start'
-                        } ${!showAvatar ? 'ml-10' : ''}`}
+                        className={`flex gap-2 items-end ${isMyMessage ? 'justify-end' : 'justify-start'
+                          } ${!showAvatar ? 'ml-10' : ''}`}
                       >
                         {!isMyMessage && showAvatar && (
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center flex-shrink-0 shadow-lg">
@@ -413,13 +430,12 @@ export default function MessagesContent({
                           </div>
                         )}
                         {!isMyMessage && !showAvatar && <div className="w-8" />}
-                        
+
                         <div
-                          className={`group max-w-[70%] px-4 py-2.5 rounded-2xl shadow-lg transition-all hover:shadow-xl ${
-                            isMyMessage
-                              ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-br-md'
-                              : 'bg-zinc-800/90 text-zinc-100 border border-white/5 rounded-bl-md backdrop-blur-sm'
-                          }`}
+                          className={`group max-w-[70%] px-4 py-2.5 rounded-2xl shadow-lg transition-all hover:shadow-xl ${isMyMessage
+                            ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-br-md'
+                            : 'bg-zinc-800/90 text-zinc-100 border border-white/5 rounded-bl-md backdrop-blur-sm'
+                            }`}
                         >
                           <p className="text-sm break-words leading-relaxed">{msg.message}</p>
                           <div className={`flex items-center gap-1.5 mt-1 ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
@@ -442,7 +458,7 @@ export default function MessagesContent({
                             )}
                           </div>
                         </div>
-                        
+
                         {isMyMessage && showAvatar && (
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center flex-shrink-0 shadow-lg">
                             <User className="w-4 h-4 text-white" />

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Calendar, MapPin, User, DollarSign, MessageSquare, Eye, Trash2, CreditCard } from 'lucide-react';
+import { MapPin, MessageSquare, Eye, Trash2, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import BookingDetailsModal from './BookingDetailsModal';
 import PaymentModal from './PaymentModal';
@@ -61,7 +61,7 @@ export default function BookingList({
 
   const handleCancelBooking = async (bookingId: string) => {
     const booking = bookings.find(b => b._id === bookingId);
-    
+
     if (!booking) {
       setToastMessage({
         text: '⚠️ Booking not found. Please refresh the page.',
@@ -95,8 +95,8 @@ export default function BookingList({
     }
 
     const propertyName = booking.propertyId?.title || 'this property';
-    
-    const confirmMessage = booking.status === 'paid' 
+
+    const confirmMessage = booking.status === 'paid'
       ? `Are you sure you want to cancel your booking for ${propertyName}?\n\nPayment has been made. Cancelling will process a refund.\nThis action cannot be undone.`
       : `Are you sure you want to cancel your booking for ${propertyName}?\n\nThis action cannot be undone.`;
 
@@ -121,7 +121,7 @@ export default function BookingList({
       }
 
       const refundMessage = booking.status === 'paid' ? ' Refund will be processed in 5-7 business days.' : '';
-      
+
       setToastMessage({
         text: `✅ Booking for ${propertyName} cancelled successfully.${refundMessage}`,
         type: 'success',
@@ -134,12 +134,13 @@ export default function BookingList({
 
       // Reload page to reflect changes
       setTimeout(() => window.location.reload(), 1500);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Cancel error:', error);
-      const errorMessage = error.message?.includes('Network') 
+      const err = error as Error;
+      const errorMessage = err.message?.includes('Network')
         ? '⚠️ Network error. Please check your connection and try again.'
-        : error.message || '⚠️ Failed to cancel booking. Please try again or contact support.';
-      
+        : err.message || '⚠️ Failed to cancel booking. Please try again or contact support.';
+
       setToastMessage({
         text: errorMessage,
         type: 'error',
@@ -267,7 +268,7 @@ export default function BookingList({
                     <span className="text-yellow-400 font-semibold text-lg">⏳</span>
                     <div>
                       <p className="text-sm font-semibold text-yellow-100">Waiting for Owner Approval</p>
-                      <p className="text-xs text-yellow-200/70 mt-1">The owner will review your request within 24 hours. You'll be able to make the payment once approved.</p>
+                      <p className="text-xs text-yellow-200/70 mt-1">The owner will review your request within 24 hours. You&apos;ll be able to make the payment once approved.</p>
                     </div>
                   </div>
                 )}
@@ -349,11 +350,10 @@ export default function BookingList({
       {/* Toast Notification */}
       {toastMessage && (
         <div
-          className={`fixed bottom-4 right-4 z-50 max-w-sm px-6 py-4 rounded-2xl font-medium text-white backdrop-blur-md border transition-all shadow-2xl ${
-            toastMessage.type === 'success'
+          className={`fixed bottom-4 right-4 z-50 max-w-sm px-6 py-4 rounded-2xl font-medium text-white backdrop-blur-md border transition-all shadow-2xl ${toastMessage.type === 'success'
               ? 'bg-green-500/20 border-green-500/30 text-green-100'
               : 'bg-red-500/20 border-red-500/30 text-red-100'
-          }`}
+            }`}
         >
           <p className="text-sm">{toastMessage.text}</p>
         </div>

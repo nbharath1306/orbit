@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 
 /**
  * Custom hook to handle hydration safely
@@ -6,13 +6,11 @@ import { useEffect, useState } from 'react';
  * Prevents hydration mismatches
  */
 export function useHydrated(): boolean {
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
-
-  return hydrated;
+  return useSyncExternalStore(
+    () => () => { },
+    () => true,
+    () => false
+  );
 }
 
 /**

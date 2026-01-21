@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  MessageCircle, 
-  Send, 
-  Loader2, 
-  AlertCircle, 
-  X, 
+import {
+  MessageCircle,
+  Send,
+  Loader2,
+  AlertCircle,
+  X,
   Minimize2,
   Shield,
   ShieldCheck
@@ -52,29 +52,7 @@ export default function DockableChat({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    if (isOpen && !isMinimized) {
-      checkAuth();
-      initializeThread();
-    }
-  }, [isOpen, isMinimized]);
-
-  useEffect(() => {
-    if (isOpen && threadId && !isMinimized) {
-      fetchMessages();
-      const interval = setInterval(fetchMessages, 2000);
-      return () => clearInterval(interval);
-    }
-  }, [isOpen, threadId, isMinimized]);
-
-  useEffect(() => {
-    if (!isMinimized) {
-      scrollToBottom();
-      setUnreadCount(0);
-    }
-  }, [messages, isMinimized]);
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const res = await fetch('/api/auth/session');
       const data = await res.json();
@@ -86,14 +64,21 @@ export default function DockableChat({
     } catch (err) {
       console.error('Auth check error:', err);
     }
-  };
+  }, []);
 
-  const initializeThread = () => {
+  const initializeThread = useCallback(() => {
     const id = `${propertyId}-${ownerId}`;
     setThreadId(id);
-  };
+  }, [propertyId, ownerId]);
 
-  const fetchMessages = async () => {
+  useEffect(() => {
+    if (isOpen && !isMinimized) {
+      checkAuth();
+      initializeThread();
+    }
+  }, [isOpen, isMinimized, checkAuth, initializeThread]);
+
+  const fetchMessages = useCallback(async () => {
     if (!threadId) return;
     try {
       setFetching(true);
@@ -101,19 +86,38 @@ export default function DockableChat({
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       const newMsgs = data.messages || [];
-      
+
       // Count new messages if minimized
       if (isMinimized && newMsgs.length > messages.length) {
-        setUnreadCount(unreadCount + (newMsgs.length - messages.length));
+        setUnreadCount(prev => prev + (newMsgs.length - messages.length));
       }
-      
+
       setMessages(newMsgs);
     } catch (err) {
       console.error('Error fetching messages:', err);
     } finally {
       setFetching(false);
     }
-  };
+  }, [threadId, isMinimized, messages.length]);
+
+  useEffect(() => {
+    if (isOpen && threadId && !isMinimized) {
+      fetchMessages();
+      const interval = setInterval(fetchMessages, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [isOpen, threadId, isMinimized, fetchMessages]);
+
+  useEffect(() => {
+    if (!isMinimized) {
+      scrollToBottom();
+      setUnreadCount(0);
+    }
+  }, [messages, isMinimized]);
+
+
+
+
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,8 +155,9 @@ export default function DockableChat({
       window.dispatchEvent(new CustomEvent('newMessage', {
         detail: { ownerId, property: propertyTitle, threadId },
       }));
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to send message');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to send message';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -187,11 +192,10 @@ export default function DockableChat({
     <>
       {/* Floating Chat Window */}
       <div
-        className={`fixed z-50 transition-all duration-300 ease-in-out ${
-          isMinimized
-            ? 'bottom-4 right-4 w-80'
-            : 'bottom-4 right-4 w-96 h-[600px]'
-        }`}
+        className={`fixed z-50 transition-all duration-300 ease-in-out ${isMinimized
+          ? 'bottom-4 right-4 w-80'
+          : 'bottom-4 right-4 w-96 h-[600px]'
+          }`}
         style={{ maxHeight: isMinimized ? 'auto' : 'calc(100vh - 2rem)' }}
       >
         {/* Chat Header */}
@@ -240,7 +244,7 @@ export default function DockableChat({
                   <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
                   <p className="text-white font-medium mb-2">Please Log In</p>
                   <p className="text-zinc-400 text-sm mb-4">You need to be logged in to chat</p>
-                  <Button 
+                  <Button
                     onClick={() => window.location.href = '/login'}
                     className="bg-emerald-600 hover:bg-emerald-700"
                   >
@@ -266,16 +270,14 @@ export default function DockableChat({
                   {messages.map((msg) => (
                     <div
                       key={msg._id}
-                      className={`flex ${
-                        msg.senderRole === 'student' ? 'justify-end' : 'justify-start'
-                      }`}
+                      className={`flex ${msg.senderRole === 'student' ? 'justify-end' : 'justify-start'
+                        }`}
                     >
                       <div
-                        className={`max-w-[75%] px-4 py-2 rounded-2xl shadow-lg ${
-                          msg.senderRole === 'student'
-                            ? 'bg-emerald-600 text-white rounded-br-sm'
-                            : 'bg-zinc-800 text-zinc-200 rounded-bl-sm'
-                        }`}
+                        className={`max-w-[75%] px-4 py-2 rounded-2xl shadow-lg ${msg.senderRole === 'student'
+                          ? 'bg-emerald-600 text-white rounded-br-sm'
+                          : 'bg-zinc-800 text-zinc-200 rounded-bl-sm'
+                          }`}
                       >
                         <p className="text-sm break-words">{msg.message}</p>
                         <p className="text-xs opacity-70 mt-1">

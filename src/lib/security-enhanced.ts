@@ -48,10 +48,10 @@ export function rateLimit(
       count: 1,
       resetTime: now + windowMs,
     });
-    return { 
-      success: true, 
-      remaining: limit - 1, 
-      resetTime: now + windowMs 
+    return {
+      success: true,
+      remaining: limit - 1,
+      resetTime: now + windowMs
     };
   }
 
@@ -108,7 +108,7 @@ if (typeof window === 'undefined') {
  */
 export function sanitizeString(input: unknown): string {
   if (typeof input !== 'string') return '';
-  
+
   return input
     .trim()
     // Remove HTML tags
@@ -130,11 +130,11 @@ export function sanitizeString(input: unknown): string {
  */
 export function sanitizeHtml(input: string): string {
   if (typeof input !== 'string') return '';
-  
+
   // Allow only safe HTML tags
   const safeTags = ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li'];
   const tagRegex = new RegExp(`<(?!\\/?(${safeTags.join('|')})\\b)[^>]+>`, 'gi');
-  
+
   return sanitizeString(input)
     .replace(tagRegex, '')
     .slice(0, 5000);
@@ -145,10 +145,10 @@ export function sanitizeHtml(input: string): string {
  */
 export function validateObjectId(id: unknown): string | null {
   if (typeof id !== 'string') return null;
-  
+
   const objectIdRegex = /^[0-9a-fA-F]{24}$/;
   if (!objectIdRegex.test(id)) return null;
-  
+
   return id;
 }
 
@@ -157,13 +157,13 @@ export function validateObjectId(id: unknown): string | null {
  */
 export function validateEmail(email: unknown): string | null {
   if (typeof email !== 'string') return null;
-  
+
   // RFC 5322 simplified email regex
   const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-  
+
   if (!emailRegex.test(email)) return null;
   if (email.length > 254) return null; // RFC 5321
-  
+
   return email.toLowerCase().trim();
 }
 
@@ -172,7 +172,7 @@ export function validateEmail(email: unknown): string | null {
  */
 export function validateUrl(url: unknown): string | null {
   if (typeof url !== 'string') return null;
-  
+
   try {
     const parsed = new URL(url);
     // Only allow http and https protocols
@@ -190,16 +190,16 @@ export function validateUrl(url: unknown): string | null {
  */
 export function validatePhone(phone: unknown): string | null {
   if (typeof phone !== 'string') return null;
-  
+
   // Allow only digits, spaces, +, -, (, )
   const cleanPhone = phone.replace(/[^\d+\-() ]/g, '');
-  
+
   // Must be between 10 and 15 digits
   const digitsOnly = cleanPhone.replace(/\D/g, '');
   if (digitsOnly.length < 10 || digitsOnly.length > 15) {
     return null;
   }
-  
+
   return cleanPhone;
 }
 
@@ -208,7 +208,7 @@ export function validatePhone(phone: unknown): string | null {
  */
 export function sanitizeFilename(filename: unknown): string | null {
   if (typeof filename !== 'string') return null;
-  
+
   return filename
     .replace(/[^a-zA-Z0-9._-]/g, '_')
     .replace(/\.{2,}/g, '.')
@@ -224,11 +224,11 @@ export function validateInteger(
   max?: number
 ): number | null {
   const num = typeof value === 'string' ? parseInt(value, 10) : Number(value);
-  
+
   if (!Number.isInteger(num) || isNaN(num)) return null;
   if (min !== undefined && num < min) return null;
   if (max !== undefined && num > max) return null;
-  
+
   return num;
 }
 
@@ -242,16 +242,16 @@ export function validatePagination(params: {
 }): { limit: number; skip: number } {
   const maxLimit = 100;
   const defaultLimit = 20;
-  
-  let limit = validateInteger(params.limit, 1, maxLimit) || defaultLimit;
+
+  const limit = validateInteger(params.limit, 1, maxLimit) || defaultLimit;
   let skip = validateInteger(params.skip, 0) || 0;
-  
+
   // If page is provided, calculate skip
   if (params.page) {
     const page = validateInteger(params.page, 1) || 1;
     skip = (page - 1) * limit;
   }
-  
+
   return { limit, skip };
 }
 
@@ -267,7 +267,7 @@ export const schemas = {
   phone: z.string().regex(/^[\d+\-() ]{10,20}$/),
   date: z.coerce.date(),
   positiveInt: z.number().int().positive(),
-  
+
   // Common field schemas
   name: z.string().min(1).max(100).transform(sanitizeString),
   description: z.string().min(1).max(5000).transform(sanitizeString),
@@ -312,12 +312,12 @@ export function getClientIp(req: NextRequest): string {
   const realIp = req.headers.get('x-real-ip');
   const cfConnectingIp = req.headers.get('cf-connecting-ip'); // Cloudflare
   const trueClientIp = req.headers.get('true-client-ip'); // Akamai
-  
+
   if (cfConnectingIp) return cfConnectingIp;
   if (trueClientIp) return trueClientIp;
   if (forwarded) return forwarded.split(',')[0].trim();
   if (realIp) return realIp;
-  
+
   return 'unknown';
 }
 
@@ -357,24 +357,24 @@ export interface ApiError {
 export function createErrorResponse(
   message: string,
   status: number = 500,
-  details?: any
+  details?: unknown
 ): NextResponse {
   const isDev = process.env.NODE_ENV === 'development';
-  
+
   // Sanitize error message to prevent information leakage
   const safeMessage = sanitizeString(message).slice(0, 200);
-  
-  const response: any = {
+
+  const response: Record<string, unknown> = {
     error: safeMessage,
     status,
     timestamp: new Date().toISOString(),
   };
-  
+
   // Only include details in development
   if (isDev && details) {
     response.details = details;
   }
-  
+
   return NextResponse.json(response, { status });
 }
 
@@ -390,31 +390,32 @@ export function createRateLimitResponse(retryAfter: number): NextResponse {
     },
     { status: 429 }
   );
-  
+
   response.headers.set('Retry-After', retryAfter.toString());
   response.headers.set('X-RateLimit-Limit', '100');
   response.headers.set('X-RateLimit-Remaining', '0');
   response.headers.set('X-RateLimit-Reset', (Date.now() + retryAfter * 1000).toString());
-  
+
   return response;
 }
 
 /**
  * Wrap error safely for logging (removes sensitive data)
  */
-export function sanitizeErrorForLog(error: any): any {
+export function sanitizeErrorForLog(error: unknown): Record<string, unknown> | null {
   if (!error) return null;
-  
-  const sanitized: any = {
-    message: error.message || 'Unknown error',
-    name: error.name || 'Error',
+
+  const err = error as Record<string, unknown>;
+  const sanitized: Record<string, unknown> = {
+    message: typeof err.message === 'string' ? err.message : 'Unknown error',
+    name: typeof err.name === 'string' ? err.name : 'Error',
   };
-  
+
   // Include stack trace only in development
-  if (process.env.NODE_ENV === 'development' && error.stack) {
-    sanitized.stack = error.stack;
+  if (process.env.NODE_ENV === 'development' && typeof err.stack === 'string') {
+    sanitized.stack = err.stack;
   }
-  
+
   return sanitized;
 }
 
@@ -429,22 +430,22 @@ export function sanitizeErrorForLog(error: any): any {
 export const securityHeaders = {
   // Prevent MIME type sniffing
   'X-Content-Type-Options': 'nosniff',
-  
+
   // Prevent clickjacking
   'X-Frame-Options': 'DENY',
-  
+
   // Enable XSS protection
   'X-XSS-Protection': '1; mode=block',
-  
+
   // Control referrer information
   'Referrer-Policy': 'strict-origin-when-cross-origin',
-  
+
   // Feature policy
   'Permissions-Policy': 'geolocation=(), microphone=(), camera=(), payment=()',
-  
+
   // Strict transport security (HTTPS only)
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-  
+
   // Content security policy (adjust based on your needs)
   'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;",
 };
@@ -481,25 +482,32 @@ export function addRateLimitHeaders(
 /**
  * Validate session and extract user safely
  */
-export function validateSession(session: any): {
+interface SessionUser {
+  email: string | null;
+  name: string | null;
+  id: string;
+}
+
+export function validateSession(session: unknown): {
   valid: boolean;
   user?: { email: string; name?: string; id?: string };
 } {
-  if (!session?.user?.email) {
+  const s = session as { user?: SessionUser };
+  if (!s?.user?.email) {
     return { valid: false };
   }
-  
-  const email = validateEmail(session.user.email);
+
+  const email = validateEmail(s.user.email);
   if (!email) {
     return { valid: false };
   }
-  
+
   return {
     valid: true,
     user: {
       email,
-      name: session.user.name ? sanitizeString(session.user.name) : undefined,
-      id: session.user.id,
+      name: s.user.name ? sanitizeString(s.user.name) : undefined,
+      id: s.user.id,
     },
   };
 }
@@ -525,9 +533,9 @@ export function validatePassword(password: unknown): {
   if (typeof password !== 'string') {
     return { valid: false, errors: ['Password must be a string'] };
   }
-  
+
   const errors: string[] = [];
-  
+
   if (password.length < 8) {
     errors.push('Password must be at least 8 characters');
   }
@@ -543,7 +551,7 @@ export function validatePassword(password: unknown): {
   if (!/[0-9]/.test(password)) {
     errors.push('Password must contain at least one number');
   }
-  
+
   return {
     valid: errors.length === 0,
     errors,
@@ -558,26 +566,26 @@ export function validatePassword(password: unknown): {
  * Sanitize input for MongoDB queries
  * Prevents NoSQL injection attacks
  */
-export function sanitizeMongoQuery(query: any): any {
+export function sanitizeMongoQuery(query: unknown): unknown {
   if (typeof query !== 'object' || query === null) {
     return query;
   }
-  
+
   // Remove operator injection attempts
-  const sanitized: any = {};
-  for (const [key, value] of Object.entries(query)) {
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(query as Record<string, unknown>)) {
     // Skip MongoDB operators in user input
     if (key.startsWith('$')) {
       continue;
     }
-    
+
     if (typeof value === 'object' && value !== null) {
       sanitized[key] = sanitizeMongoQuery(value);
     } else {
       sanitized[key] = value;
     }
   }
-  
+
   return sanitized;
 }
 
@@ -590,45 +598,18 @@ export function sanitizeMongoQuery(query: any): any {
  */
 export function getCorsHeaders(origin?: string): Record<string, string> {
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'];
-  
+
   const headers: Record<string, string> = {
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Max-Age': '86400', // 24 hours
   };
-  
+
   if (origin && allowedOrigins.includes(origin)) {
     headers['Access-Control-Allow-Origin'] = origin;
     headers['Access-Control-Allow-Credentials'] = 'true';
   }
-  
+
   return headers;
 }
 
-export default {
-  rateLimit,
-  getRateLimitIdentifier,
-  sanitizeString,
-  sanitizeHtml,
-  validateObjectId,
-  validateEmail,
-  validateUrl,
-  validatePhone,
-  validateInteger,
-  validatePagination,
-  validateSchema,
-  schemas,
-  getClientIp,
-  getUserAgent,
-  getRequestMetadata,
-  createErrorResponse,
-  createRateLimitResponse,
-  sanitizeErrorForLog,
-  addSecurityHeaders,
-  addRateLimitHeaders,
-  validateSession,
-  hasRole,
-  validatePassword,
-  sanitizeMongoQuery,
-  getCorsHeaders,
-};

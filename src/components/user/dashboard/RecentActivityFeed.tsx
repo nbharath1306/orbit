@@ -27,7 +27,8 @@ export default function RecentActivityFeed({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
   const getActivityIcon = (type: Activity['type']) => {
     switch (type) {
@@ -48,24 +49,7 @@ export default function RecentActivityFeed({
     }
   };
 
-  const getActivityColor = (type: Activity['type']) => {
-    switch (type) {
-      case 'booking_confirmed':
-        return 'bg-green-50 border-green-200';
-      case 'booking_cancelled':
-        return 'bg-red-50 border-red-200';
-      case 'review_response':
-        return 'bg-amber-50 border-amber-200';
-      case 'message_received':
-        return 'bg-blue-50 border-blue-200';
-      case 'payment_received':
-        return 'bg-yellow-50 border-yellow-200';
-      case 'property_liked':
-        return 'bg-pink-50 border-pink-200';
-      default:
-        return 'bg-slate-50 border-slate-200';
-    }
-  };
+
 
   const getRelativeTime = (date: Date | string) => {
     if (!mounted) return 'recently';
@@ -90,7 +74,7 @@ export default function RecentActivityFeed({
     <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-zinc-900/40 backdrop-blur-md">
       {/* Glass effect overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent opacity-50 pointer-events-none" />
-      
+
       {/* Header */}
       <div className="relative z-10 px-4 sm:px-6 py-4 border-b border-white/5">
         <h3 className="text-base sm:text-lg font-bold text-white">Recent Activity</h3>
@@ -103,9 +87,8 @@ export default function RecentActivityFeed({
             <button
               key={activity.id}
               onClick={() => onActivityClick?.(activity)}
-              className={`w-full text-left px-4 sm:px-6 py-3 sm:py-4 hover:bg-white/5 active:bg-white/10 transition-colors flex gap-3 sm:gap-4 items-start focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500/50 ${
-                activity.link ? 'cursor-pointer' : ''
-              }`}
+              className={`w-full text-left px-4 sm:px-6 py-3 sm:py-4 hover:bg-white/5 active:bg-white/10 transition-colors flex gap-3 sm:gap-4 items-start focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500/50 ${activity.link ? 'cursor-pointer' : ''
+                }`}
               aria-label={`View ${activity.title}`}
             >
               {/* Timeline connector */}

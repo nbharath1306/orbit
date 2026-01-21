@@ -50,6 +50,7 @@ export default function PaymentModal({
       script.async = true;
 
       script.onload = () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const razorpay = (window as any).Razorpay;
 
         const options = {
@@ -57,6 +58,7 @@ export default function PaymentModal({
           amount: Math.round(amount * 100), // Convert to paise
           currency: 'INR',
           order_id: orderId,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           handler: async (response: any) => {
             try {
               // Verify payment on backend
@@ -85,8 +87,9 @@ export default function PaymentModal({
               setTimeout(() => {
                 onClose();
               }, 2000);
-            } catch (err: any) {
-              setError(err.message || 'Payment verification failed');
+            } catch (err: unknown) {
+              const errorMessage = err instanceof Error ? err.message : 'Payment verification failed';
+              setError(errorMessage);
             }
           },
           prefill: {
@@ -103,8 +106,9 @@ export default function PaymentModal({
       };
 
       document.body.appendChild(script);
-    } catch (err: any) {
-      setError(err.message || 'Failed to process payment');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to process payment';
+      setError(errorMessage);
     } finally {
       setIsProcessing(false);
     }
@@ -151,7 +155,7 @@ export default function PaymentModal({
 
           <div className="text-sm text-zinc-400 bg-zinc-800/30 border border-zinc-700 rounded-lg p-3">
             <p>
-              Click "Pay Now" to proceed to secure payment via Razorpay. This is
+              Click &quot;Pay Now&quot; to proceed to secure payment via Razorpay. This is
               a non-refundable payment.
             </p>
           </div>

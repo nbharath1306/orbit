@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -38,41 +38,37 @@ export default function BookingsPageContent({ initialBookings }: BookingsPageCon
       <div className="flex gap-2 sm:gap-4 mb-6 border-b border-white/10 overflow-x-auto">
         <button
           onClick={() => handleFilterChange('all')}
-          className={`px-3 sm:px-4 py-2 border-b-2 text-sm font-semibold whitespace-nowrap transition-colors ${
-            currentFilter === 'all'
+          className={`px-3 sm:px-4 py-2 border-b-2 text-sm font-semibold whitespace-nowrap transition-colors ${currentFilter === 'all'
               ? 'border-blue-500 text-blue-400'
               : 'border-transparent text-zinc-400 hover:text-blue-400'
-          }`}
+            }`}
         >
           All ({initialBookings.length})
         </button>
         <button
           onClick={() => handleFilterChange('active')}
-          className={`px-3 sm:px-4 py-2 border-b-2 text-sm font-semibold whitespace-nowrap transition-colors ${
-            currentFilter === 'active'
+          className={`px-3 sm:px-4 py-2 border-b-2 text-sm font-semibold whitespace-nowrap transition-colors ${currentFilter === 'active'
               ? 'border-blue-500 text-blue-400'
               : 'border-transparent text-zinc-400 hover:text-blue-400'
-          }`}
+            }`}
         >
           Active ({activeCount})
         </button>
         <button
           onClick={() => handleFilterChange('completed')}
-          className={`px-3 sm:px-4 py-2 border-b-2 text-sm font-semibold whitespace-nowrap transition-colors ${
-            currentFilter === 'completed'
+          className={`px-3 sm:px-4 py-2 border-b-2 text-sm font-semibold whitespace-nowrap transition-colors ${currentFilter === 'completed'
               ? 'border-blue-500 text-blue-400'
               : 'border-transparent text-zinc-400 hover:text-blue-400'
-          }`}
+            }`}
         >
           Completed ({completedCount})
         </button>
         <button
           onClick={() => handleFilterChange('cancelled')}
-          className={`px-3 sm:px-4 py-2 border-b-2 text-sm font-semibold whitespace-nowrap transition-colors ${
-            currentFilter === 'cancelled'
+          className={`px-3 sm:px-4 py-2 border-b-2 text-sm font-semibold whitespace-nowrap transition-colors ${currentFilter === 'cancelled'
               ? 'border-blue-500 text-blue-400'
               : 'border-transparent text-zinc-400 hover:text-blue-400'
-          }`}
+            }`}
         >
           Cancelled ({cancelledCount})
         </button>

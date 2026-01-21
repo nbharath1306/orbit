@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -123,7 +123,7 @@ export default function BookingCard({ booking: initialBooking }: { booking: Book
 
       // Initialize Razorpay (mock for now)
       toast.success('Payment gateway opened (mock)');
-      
+
       // In production, integrate actual Razorpay:
       // const options = {
       //   key: orderData.keyId,
@@ -233,11 +233,10 @@ export default function BookingCard({ booking: initialBooking }: { booking: Book
 
             {/* Owner Response */}
             {booking.ownerResponse && (
-              <div className={`p-3 rounded-lg ${
-                booking.ownerResponse.status === 'accepted' 
-                  ? 'bg-green-50 border border-green-200' 
+              <div className={`p-3 rounded-lg ${booking.ownerResponse.status === 'accepted'
+                  ? 'bg-green-50 border border-green-200'
                   : 'bg-red-50 border border-red-200'
-              }`}>
+                }`}>
                 <div className="flex items-center gap-2 mb-1">
                   {booking.ownerResponse.status === 'accepted' ? (
                     <CheckCircle className="w-4 h-4 text-green-600" />

@@ -52,7 +52,7 @@ export function rateLimit(
  */
 export function sanitizeInput(input: string): string {
   if (typeof input !== 'string') return '';
-  
+
   return input
     .trim()
     .replace(/[<>]/g, '') // Remove < and >
@@ -89,7 +89,7 @@ export function isValidEmail(email: string): boolean {
 export function createErrorResponse(
   message: string,
   status: number = 500,
-  details?: any
+  details?: unknown
 ) {
   return NextResponse.json(
     {
@@ -108,15 +108,15 @@ export function createErrorResponse(
 export function getClientIp(req: NextRequest): string {
   const forwarded = req.headers.get('x-forwarded-for');
   const realIp = req.headers.get('x-real-ip');
-  
+
   if (forwarded) {
     return forwarded.split(',')[0].trim();
   }
-  
+
   if (realIp) {
     return realIp;
   }
-  
+
   return 'unknown';
 }
 
@@ -130,7 +130,7 @@ export function validatePagination(limit?: number, skip?: number) {
   const maxLimit = 100;
   const validLimit = Math.min(Math.max(1, limit || 10), maxLimit);
   const validSkip = Math.max(0, skip || 0);
-  
+
   return { limit: validLimit, skip: validSkip };
 }
 

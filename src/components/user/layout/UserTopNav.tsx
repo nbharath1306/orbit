@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { LogOut, Settings, ChevronDown, User, Bell, MessageSquare, Calendar, Heart, Star, CreditCard, Menu, X } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { LogOut, Settings, User, Bell, MessageSquare, Calendar, Heart, Star, CreditCard, Menu, X } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useState, useRef, useEffect } from 'react';
 import { Logo } from '@/components/ui/Logo';
@@ -15,7 +15,6 @@ interface UserTopNavProps {
 
 export default function UserTopNav({ unreadCount = 0, userName = 'User', userAvatar }: UserTopNavProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [showSettings, setShowSettings] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [liveUnreadCount, setLiveUnreadCount] = useState(unreadCount);
@@ -95,8 +94,8 @@ export default function UserTopNav({ unreadCount = 0, userName = 'User', userAva
                 key={item.path}
                 href={item.path}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-300 relative flex items-center gap-2 ${isActive(item.path)
-                    ? 'text-white bg-white/10 shadow-[0_0_20px_rgba(255,255,255,0.1)]'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                  ? 'text-white bg-white/10 shadow-[0_0_20px_rgba(255,255,255,0.1)]'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/5'
                   }`}
               >
                 {item.icon && <item.icon className="w-4 h-4" />}
@@ -207,8 +206,8 @@ export default function UserTopNav({ unreadCount = 0, userName = 'User', userAva
                   key={item.path}
                   href={item.path}
                   className={`block px-4 py-2 rounded-lg text-sm font-medium transition-all ${isActive(item.path)
-                      ? 'text-white bg-white/10'
-                      : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                    ? 'text-white bg-white/10'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
                     }`}
                   onClick={() => setShowMobileMenu(false)}
                 >

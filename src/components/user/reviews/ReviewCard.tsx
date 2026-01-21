@@ -143,22 +143,11 @@ export default function ReviewCard({ review, showProperty = false, onUpdate, isA
     }
   };
 
-  const renderStars = (rating: number) => (
-    <div className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          className={`w-4 h-4 ${
-            star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-          }`}
-        />
-      ))}
-    </div>
-  );
+
 
   const avgRating = Math.round(
-    (review.rating + review.cleanliness + review.communication + review.accuracy + 
-     review.location + review.value) / 6 * 10
+    (review.rating + review.cleanliness + review.communication + review.accuracy +
+      review.location + review.value) / 6 * 10
   ) / 10;
 
   return (
@@ -247,9 +236,8 @@ export default function ReviewCard({ review, showProperty = false, onUpdate, isA
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                       key={star}
-                      className={`w-2.5 h-2.5 ${
-                        star <= item.value ? 'fill-yellow-400 text-yellow-400' : 'text-zinc-700'
-                      }`}
+                      className={`w-2.5 h-2.5 ${star <= item.value ? 'fill-yellow-400 text-yellow-400' : 'text-zinc-700'
+                        }`}
                     />
                   ))}
                 </div>
@@ -301,7 +289,7 @@ export default function ReviewCard({ review, showProperty = false, onUpdate, isA
         <div className="p-3 rounded-lg bg-gradient-to-r from-blue-500/15 to-blue-600/10 border-l-4 border-blue-500 space-y-2">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-3.5 h-3.5 text-blue-400" />
-            <p className="font-semibold text-blue-300 text-xs">Owner's Response</p>
+            <p className="font-semibold text-blue-300 text-xs">Owner&apos;s Response</p>
           </div>
           <p className="text-xs text-zinc-300 line-clamp-2">{review.ownerResponse.comment}</p>
         </div>
@@ -314,11 +302,10 @@ export default function ReviewCard({ review, showProperty = false, onUpdate, isA
           size="sm"
           onClick={handleHelpful}
           disabled={marked}
-          className={`text-xs font-semibold transition-all px-2 py-1 h-7 ${
-            marked
+          className={`text-xs font-semibold transition-all px-2 py-1 h-7 ${marked
               ? 'bg-green-500/20 text-green-400 border border-green-500/30'
               : 'text-zinc-400 hover:text-green-400 hover:bg-green-500/10 hover:border-green-500/30 border border-white/10'
-          } rounded-full`}
+            } rounded-full`}
         >
           <ThumbsUp className={`w-3 h-3 mr-1 ${marked ? 'fill-current' : ''}`} />
           <span className={`${marked ? 'text-green-300' : 'text-zinc-500'}`}>
@@ -330,11 +317,10 @@ export default function ReviewCard({ review, showProperty = false, onUpdate, isA
           size="sm"
           onClick={handleReport}
           disabled={reported}
-          className={`text-xs font-semibold transition-all px-2 py-1 h-7 ${
-            reported
+          className={`text-xs font-semibold transition-all px-2 py-1 h-7 ${reported
               ? 'bg-red-500/20 text-red-400 border border-red-500/30'
               : 'text-zinc-400 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/30 border border-white/10'
-          } rounded-full`}
+            } rounded-full`}
         >
           <Flag className={`w-3 h-3 mr-1 ${reported ? 'fill-current' : ''}`} />
           {reported ? 'Reported' : 'Report'}

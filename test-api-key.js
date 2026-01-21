@@ -1,36 +1,35 @@
-require('dotenv').config({ path: '.env.local' });
-const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+import mongoose from 'mongoose';
+import * as dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-console.log('Testing API Key:', apiKey ? '✓ Key found' : '✗ Key not found');
-console.log('Key value:', apiKey);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-if (!apiKey) {
-  console.error('API key is missing!');
+dotenv.config({ path: join(__dirname, '.env.local') });
+
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.error('Please define the MONGODB_URI environment variable inside .env.local');
   process.exit(1);
 }
 
-const testPayload = {
-  contents: [
-    {
-      parts: [
-        { text: 'Say hello' }
-      ]
-    }
-  ]
-};
+async function testConnection() {
+  try {
+    console.log('Testing MongoDB connection...');
+    await mongoose.connect(MONGODB_URI);
+    console.log('Connected to MongoDB successfully!');
 
-fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(testPayload)
-})
-  .then(res => res.json())
-  .then(data => {
-    console.log('\n✓ API Key is VALID and working!');
-    console.log('Response:', JSON.stringify(data, null, 2));
-  })
-  .catch(err => {
-    console.error('\n✗ API Key test FAILED:');
-    console.error(err.message);
-    process.exit(1);
-  });
+    // List collections
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    console.log('Available collections:', collections.map(c => c.name));
+
+    await mongoose.disconnect();
+    console.log('Disconnected');
+  } catch (error) {
+    console.error('Connection failed:', error);
+  }
+}
+
+testConnection();

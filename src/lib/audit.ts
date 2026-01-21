@@ -10,8 +10,8 @@ export interface CreateAuditLogParams {
     resourceType: 'booking' | 'review' | 'property' | 'user' | 'payment' | 'property-rating';
     resourceId: string;
     resourceName?: string;
-    before?: Record<string, any>;
-    after?: Record<string, any>;
+    before?: Record<string, unknown>;
+    after?: Record<string, unknown>;
     changes?: string[];
     status?: 'success' | 'failure';
     errorMessage?: string;
@@ -86,7 +86,7 @@ export async function getAuditLogs(filter: {
     try {
         await dbConnect();
 
-        const query: Record<string, any> = {};
+        const query: Record<string, unknown> = {};
 
         if (filter.userId) query.userId = filter.userId;
         if (filter.resourceType) query.resourceType = filter.resourceType;

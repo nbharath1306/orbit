@@ -24,7 +24,7 @@ export default function ApprovalPendingModal({
       <div className="relative max-w-md w-full rounded-3xl border border-white/10 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 overflow-hidden shadow-2xl">
         {/* Animated background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 via-transparent to-orange-500/5 opacity-50" />
-        
+
         {/* Close button */}
         <button
           onClick={onClose}
@@ -49,7 +49,7 @@ export default function ApprovalPendingModal({
           <h2 className="text-2xl font-bold text-white mb-2">
             🎉 Reservation Request Submitted!
           </h2>
-          
+
           {/* Property name */}
           <p className="text-zinc-400 mb-6 text-sm">
             Your reservation request for <span className="text-white font-semibold">{propertyTitle}</span> has been submitted successfully.
@@ -62,7 +62,7 @@ export default function ApprovalPendingModal({
               <div className="text-left">
                 <h3 className="font-semibold text-white mb-2">⏳ Waiting for Owner Approval</h3>
                 <p className="text-sm text-zinc-300">
-                  The property owner will review your request and get back to you shortly. You'll be notified as soon as your reservation is approved.
+                  The property owner will review your request and get back to you shortly. You&apos;ll be notified as soon as your reservation is approved.
                 </p>
               </div>
             </div>
@@ -115,7 +115,7 @@ export default function ApprovalPendingModal({
           <div className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-4 mb-6">
             <p className="text-zinc-400 text-sm mb-1">Reservation Amount</p>
             <p className="text-2xl font-bold text-blue-400">₹{totalAmount.toLocaleString('en-IN')}</p>
-            <p className="text-xs text-zinc-500 mt-2">You'll make this payment after the owner approves your request</p>
+            <p className="text-xs text-zinc-500 mt-2">You&apos;ll make this payment after the owner approves your request</p>
           </div>
 
           {/* Action buttons */}

@@ -21,9 +21,10 @@ export default function NotificationCenter() {
 
   useEffect(() => {
     // Listen for new message events
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleNewMessage = (event: any) => {
       const { from, property, bookingId } = event.detail;
-      
+
       const newNotif: Notification = {
         id: `${Date.now()}`,
         type: 'message',

@@ -7,20 +7,21 @@
  * caused by browser extensions, date formatting, or other client-only changes
  */
 
-import { useEffect, useState, ReactNode, CSSProperties } from 'react';
+import { ReactNode, CSSProperties, useSyncExternalStore, useId } from 'react';
+
+// Empty subscribe function for useSyncExternalStore
+const emptySubscribe = () => () => { };
 
 /**
  * 1. BASIC HYDRATION HOOK
  * Use this to check if component has hydrated on client
  */
 export function useIsMounted(): boolean {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  return isMounted;
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
 }
 
 /**
@@ -71,14 +72,16 @@ export function getSafeStyle(
  * Formats dates only on client side
  */
 export function useSafeDate(date: Date | string): string {
-  const [formattedDate, setFormattedDate] = useState('');
-
-  useEffect(() => {
-    const d = typeof date === 'string' ? new Date(date) : date;
-    setFormattedDate(d.toLocaleDateString());
-  }, [date]);
-
-  return formattedDate;
+  // We use useSyncExternalStore to avoid hydration mismatch
+  // formatting only on client
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => {
+      const d = typeof date === 'string' ? new Date(date) : date;
+      return d.toLocaleDateString();
+    },
+    () => '' // Server snapshot is empty string to match initial state
+  );
 }
 
 /**
@@ -86,13 +89,7 @@ export function useSafeDate(date: Date | string): string {
  * Check window safely without hydration errors
  */
 export function useIsClient(): boolean {
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  return isClient;
+  return useIsMounted();
 }
 
 /**
@@ -100,13 +97,8 @@ export function useIsClient(): boolean {
  * Generate random values only on client
  */
 export function useSafeId(): string {
-  const [id, setId] = useState('');
-
-  useEffect(() => {
-    setId(Math.random().toString(36).substr(2, 9));
-  }, []);
-
-  return id;
+  // useId produces stable unique IDs across server and client
+  return useId();
 }
 
 /**
@@ -127,11 +119,6 @@ export function ExtensionProof({ children }: { children: ReactNode }) {
  * Wrap entire app for maximum hydration protection
  */
 export function HydrationSafeProvider({ children }: { children: ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
+  const mounted = useIsMounted();
   return mounted ? <>{children}</> : <>{children}</>;
 }

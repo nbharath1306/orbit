@@ -10,11 +10,11 @@ interface UseReviewsOptions {
 
 interface Review {
   _id: string;
-  studentId: any;
-  propertyId: any;
+  studentId: string;
+  propertyId: string;
   rating: number;
   comment: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface ReviewAverages {
@@ -144,7 +144,7 @@ export function useReview(reviewId: string) {
     fetchReview();
   }, [fetchReview]);
 
-  const updateReview = async (action: string, payload?: any) => {
+  const updateReview = async (action: string, payload?: Record<string, unknown>) => {
     try {
       const response = await fetch(`/api/reviews/${reviewId}`, {
         method: 'PATCH',

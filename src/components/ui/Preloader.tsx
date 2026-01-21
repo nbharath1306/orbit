@@ -16,11 +16,11 @@ export function Preloader() {
         const isHome = window.location.pathname === '/';
 
         if (hasSeen || !isHome) {
-            setIsLoading(false);
+            setTimeout(() => setIsLoading(false), 0);
             return;
         }
 
-        setIsLoading(true);
+        setTimeout(() => setIsLoading(true), 0);
 
         // Counter animation
         const interval = setInterval(() => {

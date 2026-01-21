@@ -42,17 +42,14 @@ interface ReviewListProps {
 
 export default function ReviewList({ reviews: initialReviews }: ReviewListProps) {
   const router = useRouter();
-  const [reviews, setReviews] = useState(initialReviews);
+  const [reviews] = useState(initialReviews);
 
   const handleUpdate = () => {
     // Refresh the page to get updated reviews
     router.refresh();
   };
 
-  const handleDelete = (reviewId: string) => {
-    // Remove the deleted review from the list
-    setReviews(reviews.filter(review => review._id !== reviewId));
-  };
+
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -9,8 +9,8 @@ export interface IAuditLog extends Document {
     resourceId: mongoose.Types.ObjectId;
     resourceName?: string;
     details: {
-        before?: Record<string, any>;
-        after?: Record<string, any>;
+        before?: Record<string, unknown>;
+        after?: Record<string, unknown>;
         changes?: string[];
     };
     status: 'success' | 'failure';
@@ -24,15 +24,15 @@ export interface IAuditLog extends Document {
 const AuditLogSchema: Schema<IAuditLog> = new Schema(
     {
         userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-        userRole: { 
-            type: String, 
+        userRole: {
+            type: String,
             enum: ['student', 'owner', 'admin'],
             required: true,
             index: true
         },
         userEmail: { type: String, required: true, index: true },
-        action: { 
-            type: String, 
+        action: {
+            type: String,
             required: true,
             index: true,
             enum: [
@@ -60,8 +60,8 @@ const AuditLogSchema: Schema<IAuditLog> = new Schema(
                 'admin.action'
             ]
         },
-        resourceType: { 
-            type: String, 
+        resourceType: {
+            type: String,
             enum: ['booking', 'review', 'property', 'user', 'payment', 'property-rating'],
             required: true,
             index: true
@@ -73,8 +73,8 @@ const AuditLogSchema: Schema<IAuditLog> = new Schema(
             after: { type: mongoose.Schema.Types.Mixed },
             changes: [{ type: String }]
         },
-        status: { 
-            type: String, 
+        status: {
+            type: String,
             enum: ['success', 'failure'],
             default: 'success',
             index: true

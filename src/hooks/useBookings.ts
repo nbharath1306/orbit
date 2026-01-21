@@ -9,12 +9,12 @@ interface UseBookingsOptions {
 
 interface Booking {
   _id: string;
-  propertyId: any;
+  propertyId: string;
   status: string;
   paymentStatus: string;
   checkInDate: string;
   totalAmount: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export function useBookings(options: UseBookingsOptions = {}) {
@@ -131,7 +131,7 @@ export function useBooking(bookingId: string) {
     fetchBooking();
   }, [fetchBooking]);
 
-  const updateBooking = async (action: string, payload?: any) => {
+  const updateBooking = async (action: string, payload?: Record<string, unknown>) => {
     try {
       const response = await fetch(`/api/bookings/${bookingId}`, {
         method: 'PATCH',

@@ -37,17 +37,17 @@ function isSensitiveKey(key: string): boolean {
 /**
  * Redact sensitive data from objects
  */
-function redactSensitiveData(data: any, depth = 0): any {
+function redactSensitiveData(data: unknown, depth = 0): unknown {
   // Prevent infinite recursion
   if (depth > 10) return '[Max Depth]';
-  
+
   if (data === null || data === undefined) return data;
-  
+
   // Handle arrays
   if (Array.isArray(data)) {
     return data.map(item => redactSensitiveData(item, depth + 1));
   }
-  
+
   // Handle objects
   if (typeof data === 'object') {
     // Handle special objects (Date, Error, etc.)
@@ -59,8 +59,8 @@ function redactSensitiveData(data: any, depth = 0): any {
         ...(process.env.NODE_ENV === 'development' && { stack: data.stack }),
       };
     }
-    
-    const redacted: any = {};
+
+    const redacted: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(data)) {
       if (isSensitiveKey(key)) {
         redacted[key] = '[REDACTED]';
@@ -70,17 +70,17 @@ function redactSensitiveData(data: any, depth = 0): any {
     }
     return redacted;
   }
-  
+
   return data;
 }
 
 /**
  * Format log entry with timestamp and metadata
  */
-function formatLogEntry(level: string, message: string, context?: any): string {
+function formatLogEntry(level: string, message: string, context?: Record<string, unknown>): string {
   const timestamp = new Date().toISOString();
   const env = process.env.NODE_ENV || 'development';
-  
+
   const entry = {
     timestamp,
     level: level.toUpperCase(),
@@ -88,7 +88,7 @@ function formatLogEntry(level: string, message: string, context?: any): string {
     env,
     ...(context && { context: redactSensitiveData(context) }),
   };
-  
+
   return JSON.stringify(entry);
 }
 
@@ -119,34 +119,34 @@ class Logger {
   /**
    * Log debug information (only in development)
    */
-  debug(message: string, context?: any): void {
+  debug(message: string, context?: Record<string, unknown>): void {
     if (minLogLevel <= LogLevel.DEBUG && process.env.NODE_ENV === 'development') {
       console.debug(formatLogEntry('debug', message, context));
     }
   }
-  
+
   /**
    * Log informational messages
    */
-  info(message: string, context?: any): void {
+  info(message: string, context?: Record<string, unknown>): void {
     if (minLogLevel <= LogLevel.INFO) {
       console.info(formatLogEntry('info', message, context));
     }
   }
-  
+
   /**
    * Log warning messages
    */
-  warn(message: string, context?: any): void {
+  warn(message: string, context?: Record<string, unknown>): void {
     if (minLogLevel <= LogLevel.WARN) {
       console.warn(formatLogEntry('warn', message, context));
     }
   }
-  
+
   /**
    * Log error messages
    */
-  error(message: string, error?: Error | any, context?: any): void {
+  error(message: string, error?: Error | unknown, context?: Record<string, unknown>): void {
     if (minLogLevel <= LogLevel.ERROR) {
       const errorContext = {
         ...context,
@@ -155,29 +155,29 @@ class Logger {
       console.error(formatLogEntry('error', message, errorContext));
     }
   }
-  
+
   /**
    * Log API request
    */
-  logRequest(method: string, url: string, context?: any): void {
+  logRequest(method: string, url: string, context?: Record<string, unknown>): void {
     this.info(`${method} ${url}`, {
       type: 'request',
       ...context,
     });
   }
-  
+
   /**
    * Log API response
    */
   logResponse(method: string, url: string, status: number, duration?: number): void {
     const level = status >= 500 ? 'error' : status >= 400 ? 'warn' : 'info';
-    
+
     const context = {
       type: 'response',
       status,
       ...(duration && { duration: `${duration}ms` }),
     };
-    
+
     if (level === 'error') {
       this.error(`${method} ${url}`, null, context);
     } else if (level === 'warn') {
@@ -186,7 +186,7 @@ class Logger {
       this.info(`${method} ${url}`, context);
     }
   }
-  
+
   /**
    * Log database operation
    */
@@ -196,17 +196,17 @@ class Logger {
       ...(duration && { duration: `${duration}ms` }),
     });
   }
-  
+
   /**
    * Log security event
    */
-  logSecurity(event: string, context?: any): void {
+  logSecurity(event: string, context?: Record<string, unknown>): void {
     this.warn(`Security: ${event}`, {
       type: 'security',
       ...context,
     });
   }
-  
+
   /**
    * Log rate limit event
    */
@@ -217,24 +217,24 @@ class Logger {
       endpoint,
     });
   }
-  
+
   /**
    * Log authentication event
    */
-  logAuth(event: string, userId?: string, context?: any): void {
+  logAuth(event: string, userId?: string, context?: Record<string, unknown>): void {
     this.info(`Auth: ${event}`, {
       type: 'authentication',
       userId,
       ...context,
     });
   }
-  
+
   /**
    * Log performance metric
    */
-  logPerformance(operation: string, duration: number, context?: any): void {
+  logPerformance(operation: string, duration: number, context?: Record<string, unknown>): void {
     const level = duration > 1000 ? 'warn' : 'debug';
-    
+
     if (level === 'warn') {
       this.warn(`Slow operation: ${operation}`, {
         type: 'performance',
@@ -265,7 +265,7 @@ export const logger = new Logger();
  */
 export function startTimer() {
   const start = Date.now();
-  
+
   return {
     end: (): number => {
       return Date.now() - start;
@@ -276,7 +276,7 @@ export function startTimer() {
 /**
  * Async function wrapper with logging
  */
-export function withLogging<T extends (...args: any[]) => Promise<any>>(
+export function withLogging<T extends (...args: unknown[]) => Promise<unknown>>(
   fn: T,
   operationName: string
 ): T {
@@ -304,9 +304,9 @@ export function createRequestLogger() {
     return async () => {
       const timer = startTimer();
       const requestId = Math.random().toString(36).substring(7);
-      
+
       logger.logRequest(method, url, { requestId });
-      
+
       try {
         const response = await handler();
         const duration = timer.end();

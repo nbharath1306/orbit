@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform, MotionValue } from 'framer-motion';
 import { Shield, Zap, Users, CheckCircle2, MapPin, Utensils, Smartphone } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+
 
 const CARDS = [
   {
@@ -74,12 +74,12 @@ const CARDS = [
   }
 ];
 
-const Card = ({ card, index, progress, range, targetScale }: { 
-  card: typeof CARDS[0], 
-  index: number, 
-  progress: MotionValue<number>, 
-  range: number[], 
-  targetScale: number 
+const Card = ({ card, index, progress, range, targetScale }: {
+  card: typeof CARDS[0],
+  index: number,
+  progress: MotionValue<number>,
+  range: number[],
+  targetScale: number
 }) => {
   const container = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -92,8 +92,8 @@ const Card = ({ card, index, progress, range, targetScale }: {
 
   return (
     <div ref={container} className="h-screen flex items-center justify-center sticky top-0">
-      <motion.div 
-        style={{ scale, top: `calc(-5vh + ${index * 25}px)` }} 
+      <motion.div
+        style={{ scale, top: `calc(-5vh + ${index * 25}px)` }}
         className={`relative flex flex-col md:flex-row w-full max-w-6xl h-[60vh] md:h-[70vh] rounded-[2rem] overflow-hidden shadow-2xl origin-top ${card.color}`}
       >
         {/* Content Side */}
@@ -105,13 +105,13 @@ const Card = ({ card, index, progress, range, targetScale }: {
               </div>
               <span className="text-sm font-bold tracking-widest uppercase opacity-70">Orbit Standard</span>
             </div>
-            
+
             <h2 className="text-5xl md:text-7xl font-bold tracking-tighter leading-[0.9] mb-6">
               {card.title}
               <br />
               <span className="opacity-50">{card.subtitle}</span>
             </h2>
-            
+
             <p className="text-lg md:text-xl opacity-80 max-w-md leading-relaxed">
               {card.description}
             </p>
@@ -130,9 +130,9 @@ const Card = ({ card, index, progress, range, targetScale }: {
         {/* Image Side */}
         <div className="flex-1 relative overflow-hidden h-full min-h-[300px]">
           <motion.div style={{ scale: imageScale }} className="absolute inset-0 w-full h-full">
-            <img 
-              src={card.image} 
-              alt={card.title} 
+            <img
+              src={card.image}
+              alt={card.title}
               className="w-full h-full object-cover"
             />
             <div className={`absolute inset-0 ${card.textColor === 'text-white' ? 'bg-black/20' : 'bg-white/10'}`} />
@@ -157,15 +157,15 @@ export default function WhyOrbit() {
           WHY ORBIT?
         </h2>
       </div>
-      
+
       <div className="relative z-10 pb-[20vh]">
         {CARDS.map((card, i) => {
           const targetScale = 1 - ((CARDS.length - i) * 0.05);
           return (
-            <Card 
-              key={i} 
-              card={card} 
-              index={i} 
+            <Card
+              key={i}
+              card={card}
+              index={i}
               progress={scrollYProgress}
               range={[i * (1 / CARDS.length), 1]}
               targetScale={targetScale}

@@ -1,6 +1,6 @@
 'use client';
 
-import { Users, Home, ShoppingCart, TrendingUp } from 'lucide-react';
+
 
 interface StatsCardProps {
   title: string;

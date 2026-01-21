@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Check, X, Clock, DollarSign, MessageSquare } from 'lucide-react';
 
 interface BookingRequest {
@@ -34,11 +34,7 @@ export default function OwnerBookingManagement({
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [toast, setToast] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
-  useEffect(() => {
-    loadBookings();
-  }, [propertyId]);
-
-  const loadBookings = async () => {
+  const loadBookings = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch('/api/owner/bookings?filter=pending');
@@ -52,7 +48,11 @@ export default function OwnerBookingManagement({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadBookings();
+  }, [loadBookings, propertyId]);
 
   const handleAcceptBooking = async (bookingId: string) => {
     setActionLoading(bookingId);
@@ -71,8 +71,9 @@ export default function OwnerBookingManagement({
 
       showToast('Booking accepted! Waiting for student payment', 'success');
       loadBookings();
-    } catch (error: any) {
-      showToast(error.message || 'Failed to accept booking', 'error');
+    } catch (error: unknown) {
+      const err = error as Error;
+      showToast(err.message || 'Failed to accept booking', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -97,8 +98,9 @@ export default function OwnerBookingManagement({
 
       showToast('Booking rejected', 'success');
       loadBookings();
-    } catch (error: any) {
-      showToast(error.message || 'Failed to reject booking', 'error');
+    } catch (error: unknown) {
+      const err = error as Error;
+      showToast(err.message || 'Failed to reject booking', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -289,7 +291,7 @@ export default function OwnerBookingManagement({
           <div className="text-5xl mb-4">📭</div>
           <h3 className="text-lg font-semibold text-white mb-2">No Booking Requests</h3>
           <p className="text-zinc-400">
-            You don't have any pending booking requests. Check back later!
+            You don&apos;t have any pending booking requests. Check back later!
           </p>
         </div>
       )}
@@ -297,11 +299,10 @@ export default function OwnerBookingManagement({
       {/* Toast */}
       {toast && (
         <div
-          className={`fixed bottom-4 right-4 px-6 py-3 rounded-lg font-medium text-white border transition-all ${
-            toast.type === 'success'
+          className={`fixed bottom-4 right-4 px-6 py-3 rounded-lg font-medium text-white border transition-all ${toast.type === 'success'
               ? 'bg-green-500/20 border-green-500/30 text-green-400'
               : 'bg-red-500/20 border-red-500/30 text-red-400'
-          }`}
+            }`}
         >
           {toast.text}
         </div>

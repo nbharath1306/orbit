@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { X, Calendar, MapPin, User, DollarSign, Phone, Mail, Clock } from 'lucide-react';
+
+import { X, MapPin, Clock } from 'lucide-react';
 import { BookingItem } from './BookingList';
 
 interface BookingDetailsModalProps {
@@ -157,10 +157,10 @@ export default function BookingDetailsModal({
                     {booking.status === 'pending'
                       ? '⏳ Waiting for Approval'
                       : booking.status === 'paid'
-                      ? '✅ Payment Complete'
-                      : booking.status === 'confirmed'
-                      ? '💰 Ready to Pay'
-                      : '❌ Cancelled'}
+                        ? '✅ Payment Complete'
+                        : booking.status === 'confirmed'
+                          ? '💰 Ready to Pay'
+                          : '❌ Cancelled'}
                   </p>
                 </div>
               </div>

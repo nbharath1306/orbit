@@ -19,12 +19,12 @@ export default function WelcomeCard({
   newNotifications,
   nextBookingDate,
   nextBookingProperty,
-  onQuickAction,
 }: WelcomeCardProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const getGreeting = () => {
@@ -52,7 +52,7 @@ export default function WelcomeCard({
     <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-zinc-900/40 backdrop-blur-md p-6 lg:p-8 mb-8">
       {/* Glass effect overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-transparent opacity-50 pointer-events-none" />
-      
+
       <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
         {/* Left Side */}
         <div className="flex items-start gap-3 sm:gap-4">

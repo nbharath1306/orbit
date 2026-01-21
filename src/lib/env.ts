@@ -50,36 +50,36 @@ const SENSITIVE_ENV_VARS = [
 export interface EnvConfig {
   // Database
   MONGODB_URI: string;
-  
+
   // Authentication
   NEXTAUTH_SECRET: string;
   NEXTAUTH_URL: string;
   AUTH0_CLIENT_ID?: string;
   AUTH0_CLIENT_SECRET?: string;
   AUTH0_ISSUER?: string;
-  
+
   // AI
   GOOGLE_GENERATIVE_AI_API_KEY?: string;
-  
+
   // File Storage
   CLOUDINARY_CLOUD_NAME?: string;
   CLOUDINARY_API_KEY?: string;
   CLOUDINARY_API_SECRET?: string;
-  
+
   // Payment
   RAZORPAY_KEY_ID?: string;
   RAZORPAY_KEY_SECRET?: string;
   RAZORPAY_WEBHOOK_SECRET?: string;
-  
+
   // Email
   SENDGRID_API_KEY?: string;
   SENDER_EMAIL?: string;
-  
+
   // SMS
   TWILIO_ACCOUNT_SID?: string;
   TWILIO_AUTH_TOKEN?: string;
   TWILIO_PHONE_NUMBER?: string;
-  
+
   // Application
   NODE_ENV: string;
   LOG_LEVEL: string;
@@ -94,7 +94,7 @@ export interface EnvConfig {
  * Check if an environment variable is sensitive
  */
 function isSensitiveEnvVar(key: string): boolean {
-  return SENSITIVE_ENV_VARS.includes(key as any);
+  return SENSITIVE_ENV_VARS.includes(key as typeof SENSITIVE_ENV_VARS[number]);
 }
 
 /**
@@ -102,13 +102,13 @@ function isSensitiveEnvVar(key: string): boolean {
  */
 function validateRequiredEnvVars(): string[] {
   const missing: string[] = [];
-  
+
   for (const varName of REQUIRED_ENV_VARS) {
     if (!process.env[varName]) {
       missing.push(varName);
     }
   }
-  
+
   return missing;
 }
 
@@ -118,34 +118,34 @@ function validateRequiredEnvVars(): string[] {
 export function getEnvConfig(): EnvConfig {
   // Validate required variables
   const missing = validateRequiredEnvVars();
-  
+
   if (missing.length > 0) {
     const error = `Missing required environment variables: ${missing.join(', ')}`;
     logger.error('Environment validation failed', new Error(error));
     throw new Error(error);
   }
-  
+
   // Build configuration object
-  const config: any = {};
-  
+  const config: Record<string, string | undefined> = {};
+
   // Add required variables
   for (const varName of REQUIRED_ENV_VARS) {
     config[varName] = process.env[varName];
   }
-  
+
   // Add optional variables with defaults
   for (const [varName, defaultValue] of Object.entries(OPTIONAL_ENV_VARS)) {
     config[varName] = process.env[varName] || defaultValue;
   }
-  
+
   // Add all other environment variables
   for (const key in process.env) {
     if (!config[key] && process.env[key]) {
       config[key] = process.env[key];
     }
   }
-  
-  return config as EnvConfig;
+
+  return config as unknown as EnvConfig;
 }
 
 /**
@@ -153,8 +153,8 @@ export function getEnvConfig(): EnvConfig {
  */
 export function logEnvConfig(): void {
   const config = getEnvConfig();
-  const safeConfig: any = {};
-  
+  const safeConfig: Record<string, unknown> = {};
+
   for (const [key, value] of Object.entries(config)) {
     if (isSensitiveEnvVar(key)) {
       safeConfig[key] = '[REDACTED]';
@@ -162,7 +162,7 @@ export function logEnvConfig(): void {
       safeConfig[key] = value;
     }
   }
-  
+
   logger.info('Environment configuration loaded', safeConfig);
 }
 
@@ -171,13 +171,13 @@ export function logEnvConfig(): void {
  */
 export function getRequiredEnv(key: string): string {
   const value = process.env[key];
-  
+
   if (!value) {
     const error = `Required environment variable missing: ${key}`;
     logger.error(error);
     throw new Error(error);
   }
-  
+
   return value;
 }
 
@@ -207,12 +207,12 @@ export function isDevelopment(): boolean {
  */
 export function getDatabaseUri(): string {
   const uri = getRequiredEnv('MONGODB_URI');
-  
+
   // Validate format
   if (!uri.startsWith('mongodb://') && !uri.startsWith('mongodb+srv://')) {
     throw new Error('Invalid MONGODB_URI format');
   }
-  
+
   return uri;
 }
 
@@ -249,7 +249,7 @@ export function getAllowedOrigins(): string[] {
  */
 export function validateEnvironment(): void {
   try {
-    const config = getEnvConfig();
+    getEnvConfig();
     logEnvConfig();
     logger.info('Environment validation passed');
   } catch (error) {
@@ -263,12 +263,12 @@ if (typeof window === 'undefined') {
   try {
     validateEnvironment();
   } catch (error) {
-    console.error('FATAL: Environment validation failed. Application cannot start.');
+    console.error('FATAL: Environment validation failed. Application cannot start.', error);
     process.exit(1);
   }
 }
 
-export default {
+const env = {
   getEnvConfig,
   getRequiredEnv,
   getOptionalEnv,
@@ -280,3 +280,5 @@ export default {
   getAllowedOrigins,
   validateEnvironment,
 };
+
+export default env;

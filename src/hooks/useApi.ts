@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 interface UseApiOptions<T> {
   url: string;
   initialData?: T | null;
-  dependencies?: any[];
+  dependencies?: unknown[];
   skip?: boolean;
   retries?: number;
   retryDelay?: number;
@@ -21,7 +21,7 @@ interface UseApiResult<T> {
   retry: () => Promise<void>;
 }
 
-export function useApi<T = any>({
+export function useApi<T = unknown>({
   url,
   initialData = null,
   dependencies = [],
@@ -58,13 +58,13 @@ export function useApi<T = any>({
         const result = await response.json();
         setData(result);
         setError(null);
-        
+
         if (onSuccess) {
           onSuccess(result);
         }
       } catch (err) {
         const error = err instanceof Error ? err : new Error('An unknown error occurred');
-        
+
         // Retry logic
         if (attemptNumber < retries) {
           console.warn(`API call failed (attempt ${attemptNumber + 1}/${retries + 1}), retrying...`, error);
@@ -74,7 +74,7 @@ export function useApi<T = any>({
         } else {
           console.error('API call failed after all retries:', error);
           setError(error);
-          
+
           if (onError) {
             onError(error);
           }
@@ -98,7 +98,7 @@ export function useApi<T = any>({
   return { data, loading, error, refetch, retry };
 }
 
-interface UseMutationOptions<T, V> {
+interface UseMutationOptions<T> {
   url: string;
   method?: 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   onSuccess?: (data: T) => void;
@@ -113,12 +113,12 @@ interface UseMutationResult<T, V> {
   reset: () => void;
 }
 
-export function useMutation<T = any, V = any>({
+export function useMutation<T = unknown, V = unknown>({
   url,
   method = 'POST',
   onSuccess,
   onError,
-}: UseMutationOptions<T, V>): UseMutationResult<T, V> {
+}: UseMutationOptions<T>): UseMutationResult<T, V> {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
@@ -145,7 +145,7 @@ export function useMutation<T = any, V = any>({
         const result = await response.json();
         setData(result);
         setError(null);
-        
+
         if (onSuccess) {
           onSuccess(result);
         }
@@ -154,7 +154,7 @@ export function useMutation<T = any, V = any>({
       } catch (err) {
         const error = err instanceof Error ? err : new Error('An unknown error occurred');
         setError(error);
-        
+
         if (onError) {
           onError(error);
         }

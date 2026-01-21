@@ -1,13 +1,10 @@
 'use client';
 
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { 
-  BookOpen, 
-  Star, 
-  DollarSign, 
-  AlertCircle, 
-  CheckCircle2,
+import {
+  BookOpen,
+  Star,
+  DollarSign,
   Clock
 } from 'lucide-react';
 

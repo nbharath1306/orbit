@@ -24,21 +24,21 @@ export default function ChatNavigationButton({
   const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/session');
+        const data = await res.json();
+        setIsAuthenticated(!!data.user);
+        setUserRole(data.user?.role || null);
+      } catch (err) {
+        console.error('Auth check error:', err);
+        setIsAuthenticated(false);
+        setUserRole(null);
+      }
+    };
+
     checkAuth();
   }, []);
-
-  const checkAuth = async () => {
-    try {
-      const res = await fetch('/api/auth/session');
-      const data = await res.json();
-      setIsAuthenticated(!!data.user);
-      setUserRole(data.user?.role || null);
-    } catch (err) {
-      console.error('Auth check error:', err);
-      setIsAuthenticated(false);
-      setUserRole(null);
-    }
-  };
 
   const handleChatClick = () => {
     if (isAuthenticated === false) {
@@ -54,12 +54,12 @@ export default function ChatNavigationButton({
 
     // Create threadId in the same format as DockableChat
     const threadId = `${propertyId}-${ownerId}`;
-    
+
     // Navigate to appropriate messages page based on user role
-    const messagesPath = userRole === 'owner' || userRole === 'admin' 
-      ? '/owner/messages' 
+    const messagesPath = userRole === 'owner' || userRole === 'admin'
+      ? '/owner/messages'
       : '/dashboard/messages';
-    
+
     router.push(`${messagesPath}?thread=${threadId}&property=${encodeURIComponent(propertyTitle)}`);
   };
 

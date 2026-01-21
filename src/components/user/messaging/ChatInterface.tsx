@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
   DialogTitle,
-  DialogTrigger 
+  DialogTrigger
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { MessageCircle, Send, Loader2, AlertCircle, LogOut } from 'lucide-react';
+import { MessageCircle, Send, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 interface Message {
@@ -51,26 +51,7 @@ export default function ChatInterface({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    if (open) {
-      checkAuth();
-      initializeThread();
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (open && threadId) {
-      fetchMessages();
-      const interval = setInterval(fetchMessages, 2000);
-      return () => clearInterval(interval);
-    }
-  }, [open, threadId]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const res = await fetch('/api/auth/session');
       const data = await res.json();
@@ -83,15 +64,22 @@ export default function ChatInterface({
     } catch (err) {
       console.error('Auth check error:', err);
     }
-  };
+  }, []);
 
-  const initializeThread = () => {
+  const initializeThread = useCallback(() => {
     // Create unique thread ID: property_owner_student
     const id = `${propertyId}-${ownerId}`;
     setThreadId(id);
-  };
+  }, [propertyId, ownerId]);
 
-  const fetchMessages = async () => {
+  useEffect(() => {
+    if (open) {
+      checkAuth();
+      initializeThread();
+    }
+  }, [open, checkAuth, initializeThread]);
+
+  const fetchMessages = useCallback(async () => {
     if (!threadId) return;
     try {
       setFetching(true);
@@ -104,7 +92,23 @@ export default function ChatInterface({
     } finally {
       setFetching(false);
     }
-  };
+  }, [threadId]);
+
+  useEffect(() => {
+    if (open && threadId) {
+      fetchMessages();
+      const interval = setInterval(fetchMessages, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [open, threadId, fetchMessages]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+
+
+
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,8 +157,11 @@ export default function ChatInterface({
       window.dispatchEvent(new CustomEvent('newMessage', {
         detail: { ownerId, property: propertyTitle, threadId },
       }));
-    } catch (err: any) {
-      const errorMsg = err.message || 'Failed to send message';
+      window.dispatchEvent(new CustomEvent('newMessage', {
+        detail: { ownerId, property: propertyTitle, threadId },
+      }));
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to send message';
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -187,7 +194,7 @@ export default function ChatInterface({
               <div className="text-center">
                 <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-2" />
                 <p className="text-white font-medium">Please Log In</p>
-                <Button 
+                <Button
                   onClick={() => window.location.href = '/login'}
                   className="mt-4 bg-emerald-600 hover:bg-emerald-700"
                 >
@@ -207,11 +214,10 @@ export default function ChatInterface({
 
                 {messages.map((msg) => (
                   <div key={msg._id} className={`flex ${msg.senderRole === 'student' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-xs px-4 py-2 rounded-xl ${
-                      msg.senderRole === 'student'
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-zinc-800 text-zinc-200'
-                    }`}>
+                    <div className={`max-w-xs px-4 py-2 rounded-xl ${msg.senderRole === 'student'
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-zinc-800 text-zinc-200'
+                      }`}>
                       <p className="text-sm break-words">{msg.message}</p>
                       <p className="text-xs opacity-70 mt-1">
                         {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

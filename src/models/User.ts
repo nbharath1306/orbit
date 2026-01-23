@@ -16,6 +16,8 @@ export interface IUser extends Document {
     lastSeen?: Date;
     createdAt?: Date;
     updatedAt?: Date;
+    twoFactorSecret?: string;
+    twoFactorEnabled?: boolean;
 }
 
 const UserSchema: Schema<IUser> = new Schema(
@@ -37,6 +39,8 @@ const UserSchema: Schema<IUser> = new Schema(
         blacklisted: { type: Boolean, default: false },
         isOnline: { type: Boolean, default: false },
         lastSeen: { type: Date, default: null },
+        twoFactorSecret: { type: String },
+        twoFactorEnabled: { type: Boolean, default: false },
     },
     { timestamps: true }
 );

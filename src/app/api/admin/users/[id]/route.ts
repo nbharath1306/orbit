@@ -21,8 +21,9 @@ import { logger } from '@/lib/logger';
 // GET /api/admin/users/[id] - Get user details
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const startTime = Date.now();
   const metadata = getRequestMetadata(req);
   let session: any = null;
@@ -39,7 +40,7 @@ export async function GET(
 
     // Verify admin authentication
     session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.email) {
       logger.warn('Unauthorized admin access attempt', {
         method: req.method,
@@ -53,19 +54,19 @@ export async function GET(
 
     // Verify admin role
     const adminUser = await User.findOne({ email: session.user.email }).lean();
-    
+
     if (!adminUser || adminUser.role !== 'admin') {
       logger.logSecurity('ADMIN_ACCESS_DENIED', {
         email: session.user.email,
         role: adminUser?.role || 'unknown',
-        attemptedResource: `admin/users/${params.id}`,
+        attemptedResource: `admin/users/${id}`,
         ip: metadata.ip,
       });
       return createErrorResponse('Forbidden - Admin access required', 403);
     }
 
     // Validate user ID
-    const validUserId = validateObjectId(params.id);
+    const validUserId = validateObjectId(id);
     if (!validUserId) {
       return createErrorResponse('Invalid user ID format', 400);
     }
@@ -110,7 +111,7 @@ export async function GET(
     logger.error('Admin user details failed', sanitizeErrorForLog(error), {
       metadata,
       admin: session?.user?.email || 'unknown',
-      userId: params.id,
+      userId: id,
     });
     return createErrorResponse('Failed to fetch user details', 500);
   }
@@ -119,8 +120,9 @@ export async function GET(
 // PATCH /api/admin/users/[id] - Update user
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const startTime = Date.now();
   const metadata = getRequestMetadata(req);
   let session: any = null;
@@ -137,7 +139,7 @@ export async function PATCH(
 
     // Verify admin authentication
     session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.email) {
       logger.warn('Unauthorized admin access attempt', {
         method: req.method,
@@ -151,19 +153,19 @@ export async function PATCH(
 
     // Verify admin role
     const adminUser = await User.findOne({ email: session.user.email }).lean();
-    
+
     if (!adminUser || adminUser.role !== 'admin') {
       logger.logSecurity('ADMIN_ACCESS_DENIED', {
         email: session.user.email,
         role: adminUser?.role || 'unknown',
-        attemptedResource: `admin/users/${params.id}`,
+        attemptedResource: `admin/users/${id}`,
         ip: metadata.ip,
       });
       return createErrorResponse('Forbidden - Admin access required', 403);
     }
 
     // Validate user ID
-    const validUserId = validateObjectId(params.id);
+    const validUserId = validateObjectId(id);
     if (!validUserId) {
       return createErrorResponse('Invalid user ID format', 400);
     }
@@ -178,7 +180,7 @@ export async function PATCH(
 
     // Get current user
     const currentUser = await User.findById(validUserId).lean();
-    
+
     if (!currentUser) {
       logger.warn('User not found for update', {
         userId: validUserId,
@@ -278,7 +280,7 @@ export async function PATCH(
     logger.error('Admin user update failed', sanitizeErrorForLog(error), {
       metadata,
       admin: session?.user?.email || 'unknown',
-      userId: params.id,
+      userId: id,
     });
 
     if (error.code === 11000) {

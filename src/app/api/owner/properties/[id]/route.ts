@@ -18,8 +18,9 @@ import { logger } from '@/lib/logger';
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const startTime = Date.now();
   const metadata = getRequestMetadata(req);
   let session: any = null;
@@ -58,11 +59,11 @@ export async function PATCH(
       email: session.user.email,
       method: req.method,
       url: req.url,
-      propertyId: params.id,
+      propertyId: id,
     });
 
     // Validate property ID
-    const validPropertyId = validateObjectId(params.id);
+    const validPropertyId = validateObjectId(id);
     if (!validPropertyId) {
       return createErrorResponse('Invalid property ID format', 400);
     }
@@ -268,7 +269,7 @@ export async function PATCH(
       {
         metadata,
         user: session?.user?.email || 'unknown',
-        propertyId: params.id,
+        propertyId: id,
       }
     );
 
@@ -286,8 +287,9 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const startTime = Date.now();
   const metadata = getRequestMetadata(req);
   let session: any = null;
@@ -326,11 +328,11 @@ export async function DELETE(
       email: session.user.email,
       method: req.method,
       url: req.url,
-      propertyId: params.id,
+      propertyId: id,
     });
 
     // Validate property ID
-    const validPropertyId = validateObjectId(params.id);
+    const validPropertyId = validateObjectId(id);
     if (!validPropertyId) {
       return createErrorResponse('Invalid property ID format', 400);
     }
@@ -428,7 +430,7 @@ export async function DELETE(
       {
         metadata,
         user: session?.user?.email || 'unknown',
-        propertyId: params.id,
+        propertyId: id,
       }
     );
 

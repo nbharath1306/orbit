@@ -34,6 +34,7 @@ export interface IProperty extends Document {
     reviewCount?: number;
     verdict?: string;
     sentimentTags: string[];
+    approvalStatus: 'pending' | 'approved' | 'rejected';
 }
 
 const PropertySchema: Schema<IProperty> = new Schema(
@@ -71,6 +72,11 @@ const PropertySchema: Schema<IProperty> = new Schema(
         reviewCount: { type: Number, default: 0 },
         verdict: { type: String },
         sentimentTags: [{ type: String }],
+        approvalStatus: {
+            type: String,
+            enum: ['pending', 'approved', 'rejected'],
+            default: 'pending',
+        },
     },
     { timestamps: true }
 );

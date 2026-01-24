@@ -41,6 +41,21 @@ const ownerPromotionRequestSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const OwnerPromotionRequest =
+export interface IOwnerPromotionRequest extends mongoose.Document {
+  userId: mongoose.Types.ObjectId;
+  userEmail?: string;
+  userName?: string;
+  propertyId?: mongoose.Types.ObjectId;
+  propertyTitle?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  reason?: string;
+  requestedAt: Date;
+  reviewedAt?: Date;
+  reviewedBy?: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export const OwnerPromotionRequest: mongoose.Model<IOwnerPromotionRequest> =
   mongoose.models.OwnerPromotionRequest ||
-  mongoose.model('OwnerPromotionRequest', ownerPromotionRequestSchema);
+  mongoose.model<IOwnerPromotionRequest>('OwnerPromotionRequest', ownerPromotionRequestSchema);

@@ -15,9 +15,11 @@ export interface IUser extends Document {
     isOnline: boolean;
     lastSeen?: Date;
     createdAt?: Date;
-    updatedAt?: Date;
     twoFactorSecret?: string;
     twoFactorEnabled?: boolean;
+    blacklistReason?: string;
+    blacklistedAt?: Date;
+    blacklistedBy?: mongoose.Types.ObjectId;
 }
 
 const UserSchema: Schema<IUser> = new Schema(
@@ -41,6 +43,9 @@ const UserSchema: Schema<IUser> = new Schema(
         lastSeen: { type: Date, default: null },
         twoFactorSecret: { type: String },
         twoFactorEnabled: { type: Boolean, default: false },
+        blacklistReason: { type: String },
+        blacklistedAt: { type: Date },
+        blacklistedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     },
     { timestamps: true }
 );

@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
           address: user.address || '',
           avatar: user.avatar || user.image || '',
           role: user.role,
-          emailVerified: user.emailVerified || false,
+          emailVerified: user.isVerified || false,
           createdAt: user.createdAt,
         },
         timestamp: new Date().toISOString(),

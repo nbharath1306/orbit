@@ -37,10 +37,10 @@ export async function GET(req: NextRequest) {
     }
 
     await dbConnect();
-    
+
     const count = await Property.countDocuments();
     const all = await Property.find().limit(100).lean(); // Limit to prevent memory issues
-    
+
     logger.info('Test endpoint accessed', {
       propertyCount: count,
       ip: metadata.ip,
@@ -52,9 +52,9 @@ export async function GET(req: NextRequest) {
         count,
         properties: all.map(p => ({
           id: p._id,
-          name: p.name || p.title,
+          name: p.title,
           address: p.location?.address,
-          monthlyRate: p.monthlyRate || p.price?.amount,
+          monthlyRate: p.price?.amount,
           status: p.status,
         })),
       },

@@ -20,6 +20,7 @@ import {
   sanitizeErrorForLog,
 } from '@/lib/security-enhanced';
 import { logger } from '@/lib/logger';
+import { OwnerPromotionRequest } from '@/models/OwnerPromotionRequest';
 
 // GET /api/admin/properties/[id] - Get property details
 export async function GET(
@@ -42,7 +43,7 @@ export async function GET(
 
     // Verify admin authentication
     session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.email) {
       return createErrorResponse('Unauthorized', 401);
     }
@@ -51,7 +52,7 @@ export async function GET(
 
     // Verify admin role
     const adminUser = await User.findOne({ email: session.user.email }).lean();
-    
+
     if (!adminUser || adminUser.role !== 'admin') {
       logger.logSecurity('ADMIN_ACCESS_DENIED', {
         email: session.user.email,
@@ -127,7 +128,7 @@ export async function PATCH(
 
     // Verify admin authentication
     session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.email) {
       return createErrorResponse('Unauthorized', 401);
     }
@@ -136,7 +137,7 @@ export async function PATCH(
 
     // Verify admin role
     const adminUser = await User.findOne({ email: session.user.email }).lean();
-    
+
     if (!adminUser || adminUser.role !== 'admin') {
       logger.logSecurity('ADMIN_ACCESS_DENIED', {
         email: session.user.email,
@@ -149,7 +150,7 @@ export async function PATCH(
 
     // Parse params and body
     const { id } = await params;
-    
+
     let body;
     try {
       body = await req.json();
@@ -165,7 +166,7 @@ export async function PATCH(
 
     // Get current property
     const currentProperty = await Property.findById(validPropertyId).lean();
-    
+
     if (!currentProperty) {
       logger.warn('Property not found for update', {
         propertyId: validPropertyId,
@@ -222,7 +223,6 @@ export async function PATCH(
 
     // Handle owner promotion if property is approved
     if (body.approvalStatus === 'approved' && currentProperty.approvalStatus !== 'approved') {
-      const OwnerPromotionRequest = mongoose.model('OwnerPromotionRequest');
       const owner = await User.findById(currentProperty.ownerId);
 
       if (owner && owner.role !== 'owner') {
@@ -237,7 +237,7 @@ export async function PATCH(
             userEmail: owner.email,
             userName: owner.name,
             propertyId: currentProperty._id,
-            propertyTitle: currentProperty.name,
+            propertyTitle: currentProperty.title,
             status: 'pending',
           });
         }
@@ -251,7 +251,7 @@ export async function PATCH(
       targetResourceId: validPropertyId,
       changes: {
         before: {
-          name: currentProperty.name,
+          name: currentProperty.title,
           status: currentProperty.status,
           approvalStatus: currentProperty.approvalStatus,
         },
@@ -310,7 +310,7 @@ export async function DELETE(
 
     // Verify admin authentication
     session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.email) {
       return createErrorResponse('Unauthorized', 401);
     }
@@ -319,7 +319,7 @@ export async function DELETE(
 
     // Verify admin role
     const adminUser = await User.findOne({ email: session.user.email }).lean();
-    
+
     if (!adminUser || adminUser.role !== 'admin') {
       logger.logSecurity('ADMIN_ACCESS_DENIED', {
         email: session.user.email,
@@ -339,7 +339,7 @@ export async function DELETE(
 
     // Get property
     const property = await Property.findById(validPropertyId).lean();
-    
+
     if (!property) {
       logger.warn('Property not found for deletion', {
         propertyId: validPropertyId,
@@ -376,7 +376,7 @@ export async function DELETE(
       targetResourceId: validPropertyId,
       changes: {
         deletedProperty: {
-          name: property.name,
+          name: property.title,
           ownerId: property.ownerId,
           status: property.status,
         },
@@ -390,7 +390,7 @@ export async function DELETE(
       email: session.user.email,
       adminId: adminUser._id.toString(),
       propertyId: validPropertyId,
-      propertyName: property.name,
+      propertyName: property.title,
     });
 
     const response = NextResponse.json({

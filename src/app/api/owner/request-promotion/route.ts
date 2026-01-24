@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import dbConnect from '@/lib/db';
 import mongoose from 'mongoose';
+import { OwnerPromotionRequest } from '@/models/OwnerPromotionRequest';
 import {
   rateLimit,
   getRateLimitIdentifier,
@@ -105,8 +106,6 @@ export async function POST(req: NextRequest) {
       });
       return createErrorResponse('You are already an owner', 400);
     }
-
-    const OwnerPromotionRequest = mongoose.model('OwnerPromotionRequest');
 
     // Check if already has pending request (duplicate prevention)
     const existingRequest = await OwnerPromotionRequest.findOne({
@@ -240,8 +239,6 @@ export async function GET(req: NextRequest) {
 
     await dbConnect();
 
-    const OwnerPromotionRequest = mongoose.model('OwnerPromotionRequest');
-
     const promotionRequest = await OwnerPromotionRequest.findOne({
       userId: session.user.id,
     })
@@ -259,11 +256,11 @@ export async function GET(req: NextRequest) {
         success: true,
         promotionRequest: promotionRequest
           ? {
-              id: promotionRequest._id.toString(),
-              status: promotionRequest.status,
-              propertyTitle: promotionRequest.propertyTitle,
-              createdAt: promotionRequest.createdAt,
-            }
+            id: promotionRequest._id.toString(),
+            status: promotionRequest.status,
+            propertyTitle: promotionRequest.propertyTitle,
+            createdAt: promotionRequest.createdAt,
+          }
           : null,
         timestamp: new Date().toISOString(),
       },

@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
     // Validate status filter
     const status = searchParams.get('status');
     const validStatuses = ['draft', 'published', 'archived', 'all'];
-    
+
     if (status && !validStatuses.includes(status)) {
       return createErrorResponse(
         `Invalid status filter. Allowed values: ${validStatuses.join(', ')}`,
@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
     // Fetch properties with pagination
     const [properties, totalCount] = await Promise.all([
       Property.find(query)
-        .select('name location monthlyRate status rating reviewCount images createdAt')
+        .select('title location price status rating reviewCount images createdAt')
         .sort({ createdAt: -1 })
         .limit(limit)
         .skip(skip)
@@ -326,9 +326,9 @@ export async function POST(req: NextRequest) {
         success: true,
         property: {
           id: property._id.toString(),
-          name: property.name,
+          name: property.title,
           location: property.location,
-          monthlyRate: property.monthlyRate,
+          monthlyRate: property.price?.amount,
           status: property.status,
         },
         message: 'Property created successfully',
